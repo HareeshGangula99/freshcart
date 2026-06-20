@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import InstallPWA from './InstallPWA';
 
 const menuItems = [
   { name: 'Shop', path: '/', icon: 'bi-shop', roles: ['USER', 'STORE_MANAGER', 'DELIVERY_PARTNER', 'ADMIN'] },
@@ -87,6 +88,9 @@ const Layout: React.FC = () => {
         </nav>
 
         <div className="px-3 pb-3">
+          <div className="mb-2">
+            <InstallPWA />
+          </div>
           {user && (
             <div className="p-3 rounded-3 mb-2" style={{ background: 'linear-gradient(135deg, #f9fafb, #f3f4f6)', border: '1px solid #f0f0f0' }}>
               <div className="d-flex align-items-center gap-3">
@@ -198,6 +202,16 @@ const DesktopSidebar: React.FC<{ collapsed: boolean; onToggle: (v: boolean) => v
       </nav>
 
       <div className={`px-3 pb-3 ${collapsed ? 'px-2' : ''}`}>
+        {!collapsed && (
+          <div className="mb-2">
+            <InstallPWA />
+          </div>
+        )}
+        {collapsed && (
+          <button title="Install App" onClick={() => {}} className="btn d-flex align-items-center justify-content-center w-100 px-2 py-2.5 rounded-3 border-0 mb-2" style={{ background: '#ecfdf5', color: '#059669' }}>
+            <i className="bi bi-phone" style={{ fontSize: '14px' }}></i>
+          </button>
+        )}
         {isExpanded && user && (
           <div className="p-3 rounded-3 mb-2" style={{ background: 'linear-gradient(135deg, #f9fafb, #f3f4f6)', border: '1px solid #f0f0f0' }}>
             <div className="d-flex align-items-center gap-3">
