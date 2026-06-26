@@ -47,12 +47,15 @@ const Login: React.FC = () => {
   };
 
   const triggerGoogleLogin = () => {
+    console.log('Google login triggered, CLIENT_ID:', GOOGLE_CLIENT_ID ? 'set' : 'empty');
     if (!GOOGLE_CLIENT_ID) {
       setError('Google login is not configured. Please contact admin.');
       return;
     }
     if (window.google?.accounts?.id) {
-      window.google.accounts.id.prompt();
+      window.google.accounts.id.prompt((promptResponse: any) => {
+        console.log('Google prompt response:', promptResponse);
+      });
     } else {
       setError('Google login is loading. Please try again in a moment.');
     }
@@ -145,9 +148,10 @@ const Login: React.FC = () => {
             <button
               type="button"
               onClick={triggerGoogleLogin}
+              onTouchEnd={(e) => { e.preventDefault(); triggerGoogleLogin(); }}
               disabled={googleLoading}
               className="btn w-100 fw-semibold rounded-3 py-2 d-flex align-items-center justify-content-center gap-2 mb-2"
-              style={{ border: '1.5px solid #e5e7eb', fontSize: '14px', color: '#374151', background: '#fff' }}
+              style={{ border: '1.5px solid #e5e7eb', fontSize: '14px', color: '#374151', background: '#fff', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
             >
               {googleLoading ? (
                 <span className="spinner-border spinner-border-sm" role="status"></span>

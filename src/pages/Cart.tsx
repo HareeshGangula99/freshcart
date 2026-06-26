@@ -71,17 +71,17 @@ const Cart: React.FC = () => {
   return (
     <div className="animate-fade-in">
       {/* Header */}
-      <div className="d-flex align-items-center justify-content-between mb-5">
+      <div className="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4 mb-md-5">
         <div className="d-flex align-items-center gap-3">
           <div className="d-flex align-items-center justify-content-center rounded-3" style={{ width: '44px', height: '44px', background: 'linear-gradient(135deg, #059669, #10b981)', boxShadow: '0 2px 8px rgba(5, 150, 105, 0.3)' }}>
             <i className="bi bi-cart3 text-white" style={{ fontSize: '18px' }}></i>
           </div>
           <div>
-            <h4 className="fw-bold mb-0" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.3px' }}>Your Cart</h4>
+            <h4 className="fw-bold mb-0" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.3px', fontSize: '20px' }}>Your Cart</h4>
             {cart.length > 0 && <small className="text-muted">{totalItems} item{totalItems !== 1 ? 's' : ''} • ₹{totalAmount.toFixed(2)}</small>}
           </div>
         </div>
-        <button onClick={() => navigate('/')} className="btn btn-sm fw-medium rounded-3 px-3 py-2" style={{ background: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb', transition: 'all 0.2s ease' }}
+        <button onClick={() => navigate('/')} className="btn btn-sm fw-medium rounded-3 px-3 py-2" style={{ background: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb', transition: 'all 0.2s ease', fontSize: '13px' }}
           onMouseEnter={(e) => { e.currentTarget.style.background = '#e5e7eb'; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = '#f3f4f6'; }}
         >
@@ -108,9 +108,9 @@ const Cart: React.FC = () => {
             <div className="d-flex flex-column gap-3">
               {cart.map((item, index) => (
                 <div key={item.id} className="card border-0 shadow-soft rounded-4 overflow-hidden animate-slide-up" style={{ animationDelay: `${index * 0.05}s` }}>
-                  <div className="p-3 d-flex align-items-center gap-3 cart-item-row">
+                  <div className="p-3 p-sm-3 d-flex align-items-center gap-3 cart-item-row">
                     {/* Product Image */}
-                    <div className="position-relative flex-shrink-0 rounded-3 overflow-hidden" style={{ width: '80px', height: '80px' }}>
+                    <div className="position-relative flex-shrink-0 rounded-3 overflow-hidden" style={{ width: '80px', height: '80px', minWidth: '80px' }}>
                       <img src={item.imageURL} alt={item.name} className="w-100 h-100" style={{ objectFit: 'cover' }} />
                     </div>
 

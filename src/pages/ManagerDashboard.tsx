@@ -58,19 +58,19 @@ const ManagerDashboard: React.FC = () => {
   return (
     <div className="animate-fade-in">
       {notification && (
-        <div className="position-fixed d-flex align-items-center gap-2 p-3 rounded-3 text-white fw-semibold animate-fade-in" style={{ top: '20px', right: '20px', zIndex: 1070, background: 'linear-gradient(135deg, #059669, #10b981)', boxShadow: '0 8px 32px rgba(5,150,105,0.3)', fontSize: '13px' }}>
+        <div className="position-fixed d-flex align-items-center gap-2 p-3 rounded-3 text-white fw-semibold animate-fade-in" style={{ top: '70px', right: '12px', left: '12px', zIndex: 1070, background: 'linear-gradient(135deg, #059669, #10b981)', boxShadow: '0 8px 32px rgba(5,150,105,0.3)', fontSize: '13px' }}>
           <i className="bi bi-bell"></i> {notification}
           <button onClick={() => setNotification(null)} className="btn btn-sm text-white border-0 p-0 ms-2"><i className="bi bi-x-lg"></i></button>
         </div>
       )}
 
-      <div className="d-flex align-items-center justify-content-between mb-4">
+      <div className="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
         <div className="d-flex align-items-center gap-3">
           <div className="d-flex align-items-center justify-content-center rounded-3 fc-primary" style={{ width: '40px', height: '40px' }}>
             <i className="bi bi-grid text-white"></i>
           </div>
           <div>
-            <h4 className="fw-bold mb-0" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Manager Hub</h4>
+            <h4 className="fw-bold mb-0" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '18px' }}>Manager Hub</h4>
             <small className="text-muted">Oversee orders and inventory</small>
           </div>
         </div>
@@ -79,7 +79,7 @@ const ManagerDashboard: React.FC = () => {
         </button>
       </div>
 
-      <div className="d-flex gap-1 p-1 rounded-3 mb-4" style={{ background: 'white', border: '1px solid #e5e7eb' }}>
+      <div className="d-flex gap-1 p-1 rounded-3 mb-4 hide-scrollbar" style={{ background: 'white', border: '1px solid #e5e7eb', overflowX: 'auto' }}>
         {[
           { id: 'orders' as const, label: 'Pending Orders', icon: 'bi-cart3', count: orders.length },
           { id: 'inventory' as const, label: 'Inventory', icon: 'bi-box', count: products.length },
@@ -101,7 +101,7 @@ const ManagerDashboard: React.FC = () => {
               <p className="text-muted fw-medium">No orders to process</p>
             </div>
           ) : orders.map(order => (
-            <div key={order._id} className="card border-0 shadow-sm rounded-4 p-3 d-flex align-items-center justify-content-between" style={{ cursor: 'pointer' }} onClick={() => setSelectedOrder(order)}>
+            <div key={order._id} className="card border-0 shadow-sm rounded-4 p-3 d-flex align-items-center justify-content-between flex-wrap gap-2" style={{ cursor: 'pointer' }} onClick={() => setSelectedOrder(order)}>
               <div className="d-flex align-items-center gap-3">
                 <div className="rounded-3 d-flex align-items-center justify-content-center bg-success bg-opacity-10" style={{ width: '40px', height: '40px' }}>
                   <i className="bi bi-box text-success"></i>
@@ -163,8 +163,8 @@ const ManagerDashboard: React.FC = () => {
 
       {/* Dispatch Modal */}
       {selectedOrder && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1060 }}>
-          <div className="card border-0 shadow-lg rounded-4 p-4 animate-scale-in" style={{ maxWidth: '440px', width: '100%' }}>
+        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-end align-items-md-center justify-content-center p-0 p-md-3" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1060 }}>
+          <div className="card border-0 shadow-lg rounded-top-4 rounded-md-4 p-4 animate-scale-in" style={{ maxWidth: '440px', width: '100%', borderRadius: '16px 16px 0 0' }}>
             <div className="d-flex align-items-center justify-content-between mb-3">
               <h5 className="fw-bold mb-0" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Dispatch Order</h5>
               <button onClick={() => { setSelectedOrder(null); setPartnerId(''); }} className="btn btn-sm text-muted border-0"><i className="bi bi-x-lg"></i></button>

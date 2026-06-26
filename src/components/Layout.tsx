@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import InstallPWA from './InstallPWA';
+import ChatBot from './ChatBot';
 
 const menuItems = [
   { name: 'Shop', path: '/', icon: 'bi-shop', roles: ['USER', 'STORE_MANAGER', 'DELIVERY_PARTNER', 'ADMIN'] },
@@ -140,6 +141,8 @@ const Layout: React.FC = () => {
           <Outlet />
         </div>
       </main>
+
+      <ChatBot />
     </div>
   );
 };

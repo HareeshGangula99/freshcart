@@ -353,7 +353,7 @@ const AdminDashboard: React.FC = () => {
   );
 
   const renderProductForm = (onSubmit: (e: React.FormEvent) => void, data: any, setData: any, title: string) => (
-    <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1060 }}>
+    <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3 p-sm-3" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1060 }}>
       <div className="card border-0 shadow-lg rounded-4 p-4 animate-scale-in" style={{ maxWidth: '480px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="d-flex align-items-center justify-content-between mb-3">
           <h5 className="fw-bold mb-0" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{title}</h5>
@@ -416,13 +416,13 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="animate-fade-in">
-      <div className="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+      <div className="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2 gap-md-3">
         <div className="d-flex align-items-center gap-3">
           <div className="d-flex align-items-center justify-content-center rounded-3 fc-primary" style={{ width: '40px', height: '40px' }}>
             <i className="bi bi-shield-check text-white"></i>
           </div>
           <div>
-            <h4 className="fw-bold mb-0" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Admin Panel</h4>
+            <h4 className="fw-bold mb-0" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '18px' }}>Admin Panel</h4>
             <small className="text-muted">Manage your store operations</small>
           </div>
         </div>
@@ -439,7 +439,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="d-flex gap-1 p-1 rounded-3 mb-4" style={{ background: 'white', border: '1px solid #e5e7eb', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <div className="d-flex gap-1 p-1 rounded-3 mb-4 hide-scrollbar" style={{ background: 'white', border: '1px solid #e5e7eb', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {tabs.map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
             className={`btn d-flex align-items-center gap-2 fw-medium justify-content-center rounded-2 py-2 flex-shrink-0 ${activeTab === tab.id ? 'text-white' : 'text-muted'}`}
@@ -460,8 +460,8 @@ const AdminDashboard: React.FC = () => {
 
       {/* Bulk Add Modal */}
       {showBulkForm && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1060 }}>
-          <div className="card border-0 shadow-lg rounded-4 p-4 animate-scale-in" style={{ maxWidth: '700px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-end align-items-md-center justify-content-center p-0 p-md-3" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1060 }}>
+          <div className="card border-0 shadow-lg rounded-top-4 rounded-md-4 p-4 animate-scale-in" style={{ maxWidth: '700px', width: '100%', maxHeight: '90vh', overflowY: 'auto', borderRadius: '16px 16px 0 0' }}>
             <div className="d-flex align-items-center justify-content-between mb-3">
               <div>
                 <h5 className="fw-bold mb-0" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Bulk Add Products</h5>
@@ -528,7 +528,7 @@ const AdminDashboard: React.FC = () => {
       {/* Products Tab */}
       {activeTab === 'products' && (
         <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
-          <div className="p-3 d-flex gap-2 align-items-center" style={{ borderBottom: '1px solid #f0f0f0' }}>
+          <div className="p-3 d-flex gap-2 align-items-center flex-wrap flex-sm-nowrap" style={{ borderBottom: '1px solid #f0f0f0' }}>
             <div className="position-relative flex-grow-1">
               <i className="bi bi-search position-absolute" style={{ left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: '13px' }}></i>
               <input type="text" className="form-control" style={{ paddingLeft: '36px', fontSize: '13px', border: '1px solid #e5e7eb', borderRadius: '8px' }} placeholder="Search products..." value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setPage(1); }} />
@@ -730,9 +730,9 @@ const AdminDashboard: React.FC = () => {
               <small className="text-muted">Active deliveries will appear here with live location tracking</small>
             </div>
           ) : (
-            <div className="row g-4">
+            <div className="row g-3 g-lg-4">
               {/* Delivery List */}
-              <div className="col-lg-4 d-flex flex-column gap-3" style={{ maxHeight: '600px', overflowY: 'auto' }}>
+              <div className="col-12 col-lg-4 d-flex flex-column gap-3" style={{ maxHeight: '600px', overflowY: 'auto' }}>
                 {activeDeliveries.map(order => (
                   <div
                     key={order._id}
@@ -761,7 +761,7 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               {/* Map View */}
-              <div className="col-lg-8">
+              <div className="col-12 col-lg-8">
                 {selectedDelivery ? (
                   <DeliveryTrackingMap
                     deliveryLocation={deliveryLocations[selectedDelivery._id] || null}
@@ -785,17 +785,17 @@ const AdminDashboard: React.FC = () => {
                 {selectedDelivery && (
                   <div className="card border-0 shadow-sm rounded-4 p-3 mt-3 mt-lg-0">
                     <div className="row g-3">
-                      <div className="col-md-4">
+                      <div className="col-4 col-md-4">
                         <small className="text-muted d-block mb-1" style={{ fontSize: '11px' }}>Order</small>
                         <p className="fw-bold mb-0" style={{ fontSize: '13px' }}>#{selectedDelivery._id.slice(-6).toUpperCase()}</p>
                       </div>
-                      <div className="col-md-4">
+                      <div className="col-4 col-md-4">
                         <small className="text-muted d-block mb-1" style={{ fontSize: '11px' }}>Customer</small>
-                        <p className="fw-medium mb-0" style={{ fontSize: '13px' }}>{selectedDelivery.userId?.name}</p>
+                        <p className="fw-medium mb-0 text-truncate" style={{ fontSize: '13px' }}>{selectedDelivery.userId?.name}</p>
                       </div>
-                      <div className="col-md-4">
-                        <small className="text-muted d-block mb-1" style={{ fontSize: '11px' }}>Delivery Partner</small>
-                        <p className="fw-medium mb-0" style={{ fontSize: '13px' }}>{selectedDelivery.deliveryPartnerId?.name || 'N/A'}</p>
+                      <div className="col-4 col-md-4">
+                        <small className="text-muted d-block mb-1" style={{ fontSize: '11px' }}>Partner</small>
+                        <p className="fw-medium mb-0 text-truncate" style={{ fontSize: '13px' }}>{selectedDelivery.deliveryPartnerId?.name || 'N/A'}</p>
                       </div>
                     </div>
                   </div>

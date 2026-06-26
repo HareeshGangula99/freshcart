@@ -41,29 +41,29 @@ const OrderConfirm: React.FC = () => {
   ];
 
   return (
-    <div className="d-flex align-items-center justify-content-center py-5 animate-fade-in" style={{ minHeight: '70vh' }}>
-      <div className="card border-0 shadow-sm rounded-4 p-4 text-center" style={{ maxWidth: '500px', width: '100%' }}>
+    <div className="d-flex align-items-center justify-content-center py-3 py-md-5 animate-fade-in" style={{ minHeight: '70vh' }}>
+      <div className="card border-0 shadow-sm rounded-4 p-3 p-md-4 text-center" style={{ maxWidth: '500px', width: '100%' }}>
         <div className="d-flex justify-content-center mb-4">
           <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '80px', height: '80px', background: 'linear-gradient(135deg, #d1fae5, #a7f3d0)' }}>
             <i className="bi bi-check-circle text-success" style={{ fontSize: '44px' }}></i>
           </div>
         </div>
-        <h3 className="fw-bold mb-2" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Order Confirmed!</h3>
+        <h3 className="fw-bold mb-2" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '22px' }}>Order Confirmed!</h3>
         <p className="text-muted mb-4">
           Thank you{user?.name ? `, ${user.name}` : ''}! Your order has been placed successfully.
         </p>
 
         <div className="p-3 rounded-3 text-start mb-4" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
-          <div className="d-flex justify-content-between mb-2">
+          <div className="d-flex justify-content-between mb-2 flex-wrap gap-1">
             <small className="text-muted">Order ID</small>
-            <span className="fw-bold" style={{ fontFamily: 'monospace' }}>#{orderId?.slice(-8).toUpperCase()}</span>
+            <span className="fw-bold" style={{ fontFamily: 'monospace', fontSize: '13px' }}>#{orderId?.slice(-8).toUpperCase()}</span>
           </div>
-          <div className="d-flex justify-content-between mb-2">
+          <div className="d-flex justify-content-between mb-2 flex-wrap gap-1">
             <small className="text-muted">Amount Paid</small>
             <span className="fw-bold text-success">₹{amount}</span>
           </div>
           {address && (
-            <div className="d-flex justify-content-between">
+            <div className="d-flex justify-content-between flex-wrap gap-1">
               <small className="text-muted">Deliver To</small>
               <small className="text-end"><i className="bi bi-geo-alt text-success me-1"></i>{address.street}, {address.city} - {address.zip}</small>
             </div>
@@ -87,11 +87,11 @@ const OrderConfirm: React.FC = () => {
           ))}
         </div>
 
-        <div className="d-flex gap-3">
-          <button onClick={() => navigate('/profile')} className="btn flex-grow-1 fw-medium rounded-3 py-2 d-flex align-items-center justify-content-center gap-2" style={{ border: '1.5px solid #e5e7eb', fontSize: '13px' }}>
+        <div className="d-flex gap-3 flex-wrap">
+          <button onClick={() => navigate('/profile')} className="btn flex-grow-1 fw-medium rounded-3 py-2 d-flex align-items-center justify-content-center gap-2" style={{ border: '1.5px solid #e5e7eb', fontSize: '13px', minWidth: '120px' }}>
             <i className="bi bi-bag"></i> My Orders
           </button>
-          <button onClick={() => navigate('/')} className="btn flex-grow-1 fw-bold text-white rounded-3 py-2 fc-primary d-flex align-items-center justify-content-center gap-2" style={{ fontSize: '13px' }}>
+          <button onClick={() => navigate('/')} className="btn flex-grow-1 fw-bold text-white rounded-3 py-2 fc-primary d-flex align-items-center justify-content-center gap-2" style={{ fontSize: '13px', minWidth: '120px' }}>
             <i className="bi bi-house"></i> Shop More
           </button>
         </div>

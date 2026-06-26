@@ -15,6 +15,17 @@ export const getSocket = (): Socket => {
   return socket;
 };
 
+export const registerSocketUser = (userId: string): void => {
+  const s = getSocket();
+  if (s.connected) {
+    s.emit('user_register', userId);
+  } else {
+    s.on('connect', () => {
+      s.emit('user_register', userId);
+    });
+  }
+};
+
 export const disconnectSocket = (): void => {
   if (socket) {
     socket.disconnect();

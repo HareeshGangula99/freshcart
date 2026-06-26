@@ -459,3 +459,88 @@ body {
     display: none;
   }
 }
+
+/* Mobile: ChatBot window */
+@media (min-width: 576px) {
+  .chatbot-window-desktop {
+    position: fixed !important;
+    bottom: 20px !important;
+    right: 20px !important;
+    width: min(400px, calc(100vw - 32px)) !important;
+    height: min(560px, calc(100vh - 100px)) !important;
+    max-height: min(560px, calc(100vh - 100px)) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15) !important;
+  }
+}
+
+/* Mobile: Navbar compact */
+@media (max-width: 575.98px) {
+  .navbar {
+    padding: 8px 12px !important;
+  }
+  .navbar .d-flex.align-items-center.gap-3 {
+    gap: 8px !important;
+  }
+}
+
+/* Mobile: Product grid smaller gap */
+@media (max-width: 575.98px) {
+  .product-grid.row {
+    --bs-gutter-x: 12px;
+  }
+  .product-grid.row > [class*="col-"] {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+}
+
+/* Mobile: Admin/Manager table cards */
+@media (max-width: 767.98px) {
+  .table-responsive {
+    border-radius: 12px;
+  }
+  .table-responsive table {
+    min-width: 600px;
+  }
+}
+
+/* Mobile: Reduce main container padding */
+@media (max-width: 575.98px) {
+  .container-fluid.px-3 {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+}
+
+/* Mobile: Better button touch targets */
+@media (max-width: 575.98px) {
+  .btn {
+    min-height: 38px;
+  }
+  .btn-sm {
+    min-height: 32px;
+  }
+}
+
+/* Mobile: Profile order items flex fix */
+@media (max-width: 575.98px) {
+  .card-body.p-3.d-flex.align-items-center {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 8px;
+  }
+}
+
+/* Mobile: Cart item row stacking */
+@media (max-width: 480px) {
+  .cart-item-row {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  .cart-item-row .cart-item-controls {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+}

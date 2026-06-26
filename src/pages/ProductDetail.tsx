@@ -72,7 +72,7 @@ const ProductDetail: React.FC = () => {
   return (
     <div className="animate-fade-in">
       {/* Back Button */}
-      <button onClick={() => navigate(-1)} className="btn btn-sm fw-medium mb-4 d-inline-flex align-items-center gap-2 rounded-3 px-3 py-2" style={{ background: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb', fontSize: '13px', transition: 'all 0.2s ease' }}
+      <button onClick={() => navigate(-1)} className="btn btn-sm fw-medium mb-3 mb-md-4 d-inline-flex align-items-center gap-2 rounded-3 px-3 py-2" style={{ background: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb', fontSize: '13px', transition: 'all 0.2s ease' }}
         onMouseEnter={(e) => { e.currentTarget.style.background = '#e5e7eb'; }}
         onMouseLeave={(e) => { e.currentTarget.style.background = '#f3f4f6'; }}
       >
@@ -84,7 +84,7 @@ const ProductDetail: React.FC = () => {
         <div className="row g-0">
           {/* Image */}
           <div className="col-md-6">
-            <div className="position-relative h-100" style={{ minHeight: '300px', background: '#f9fafb' }}>
+            <div className="position-relative" style={{ minHeight: '300px', height: '100%', background: '#f9fafb' }}>
               <img
                 src={product.imageURL ? (product.imageURL.startsWith('http') ? product.imageURL : `${API_BASE}${product.imageURL}`) : `https://placehold.co/600x500/f0fdf4/16a34a?text=${encodeURIComponent(product.name)}`}
                 alt={product.name}
@@ -106,7 +106,7 @@ const ProductDetail: React.FC = () => {
             </span>
 
             {/* Name */}
-            <h2 className="fw-bold mb-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '28px', letterSpacing: '-0.5px', lineHeight: 1.2 }}>
+            <h2 className="fw-bold mb-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '24px', letterSpacing: '-0.5px', lineHeight: 1.2 }}>
               {product.name}
             </h2>
 
@@ -117,7 +117,7 @@ const ProductDetail: React.FC = () => {
 
             {/* Price */}
             <div className="d-flex align-items-baseline gap-2 mb-4">
-              <span className="fw-bold" style={{ fontSize: '32px', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#059669' }}>
+              <span className="fw-bold" style={{ fontSize: '28px', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#059669' }}>
                 ₹{product.price}
               </span>
               <span className="text-muted" style={{ fontSize: '14px' }}>/unit</span>

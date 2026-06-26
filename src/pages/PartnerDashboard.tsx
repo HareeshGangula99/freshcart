@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { orderService } from '../services/api';
 import { uploadImage } from '../services/upload';
-import { getSocket } from '../services/socket';
+import { getSocket, registerSocketUser } from '../services/socket';
 import { useAuth } from '../context/AuthContext';
 import DeliveryTrackingMap from '../components/DeliveryTrackingMap';
 
@@ -21,17 +21,53 @@ const PartnerDashboard: React.FC = () => {
   const [showMap, setShowMap] = useState(false);
   const [myLocation, setMyLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [partnerDistance, setPartnerDistance] = useState<{ distance: number; ETA: string; arrived: boolean } | null>(null);
+  const [newMessageOrderId, setNewMessageOrderId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ name: string; text: string } | null>(null);
+  const activeOrderRef = useRef<any>(null);
+  const userRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const watchIdRef = useRef<number | null>(null);
   const lastEmitRef = useRef<number>(0);
   const deliveryImageRef = useRef<File | null>(null);
 
   useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => { userRef.current = user; }, [user]);
+
+  useEffect(() => {
+    if (user?.id || user?._id) {
+      registerSocketUser(String(user.id || user._id));
+    }
+  }, [user]);
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  useEffect(() => {
     const handleChatHistory = (history: any[]) => setMessages(history);
-    const handleReceiveMessage = (msg: any) => setMessages(prev => [...prev, msg]);
+    const handleReceiveMessage = (msg: any) => {
+      const current = activeOrderRef.current;
+      const currentUser = userRef.current;
+      const myId = currentUser?.id || currentUser?._id;
+      if (current && msg.orderId === current._id) {
+        if (msg.senderId !== myId) {
+          setMessages(prev => [...prev, msg]);
+        }
+      } else {
+        setNewMessageOrderId(msg.orderId);
+        setTimeout(() => setNewMessageOrderId(null), 5000);
+        if (msg.senderId !== myId) {
+          setToast({ name: msg.senderName || 'Someone', text: msg.text });
+          setTimeout(() => setToast(null), 4000);
+          if (Notification.permission === 'granted') {
+            new Notification(`${msg.senderName || 'New message'}`, { body: msg.text, icon: '/bag-check.svg' });
+          }
+        }
+      }
+    };
     const handleCustomerLocation = (data: { orderId: string; lat: number; lng: number }) => {
       setCustomerLoc({ lat: data.lat, lng: data.lng });
     };
@@ -48,14 +84,24 @@ const PartnerDashboard: React.FC = () => {
   }, []);
 
   const fetchOrders = async () => {
-    try { const res = await orderService.getPartnerOrders(); setOrders(res.data); }
+    try {
+      const res = await orderService.getPartnerOrders();
+      setOrders(res.data);
+      res.data.forEach((order: any) => {
+        if (order.orderStatus !== 'DELIVERED' && order.orderStatus !== 'CANCELLED') {
+          socket.emit('join_order_room', order._id);
+        }
+      });
+    }
     catch (error) { console.error('Failed to fetch partner orders:', error); }
   };
 
   const openChat = (order: any) => {
-    if (activeOrder) socket.emit('leave_room', activeOrder._id);
+    if (activeOrderRef.current) socket.emit('leave_room', activeOrderRef.current._id);
+    activeOrderRef.current = order;
     setActiveOrder(order);
     setMessages([]);
+    setNewMessageOrderId(null);
     socket.emit('join_room', order._id);
     socket.emit('get_chat_history', { orderId: order._id });
   };
@@ -63,8 +109,8 @@ const PartnerDashboard: React.FC = () => {
   const sendMessage = () => {
     if (!input.trim() || !activeOrder || !user) return;
     const msg = { orderId: activeOrder._id, senderId: user.id || user._id, senderName: user.name, text: input.trim(), timestamp: new Date() };
-    socket.emit('send_message', msg);
     setMessages(prev => [...prev, msg]);
+    socket.emit('send_message', { orderId: activeOrder._id, senderId: user.id || user._id, senderName: user.name, text: input.trim() });
     setInput('');
   };
 
@@ -143,9 +189,26 @@ const PartnerDashboard: React.FC = () => {
 
   return (
     <div className="animate-fade-in" style={{ minHeight: 'calc(100vh - 100px)' }}>
-      <div className="row g-4">
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          className="position-fixed d-flex align-items-center gap-3 p-3 rounded-3 animate-slide-up"
+          style={{ top: '70px', right: '12px', left: '12px', maxWidth: '400px', marginLeft: 'auto', zIndex: 1080, background: 'white', boxShadow: '0 8px 32px rgba(0,0,0,0.15)', border: '1px solid #e5e7eb', cursor: 'pointer' }}
+          onClick={() => setToast(null)}
+        >
+          <div className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0" style={{ width: '40px', height: '40px', fontSize: '14px', background: 'linear-gradient(135deg, #059669, #10b981)' }}>
+            {toast.name?.[0]?.toUpperCase() || 'M'}
+          </div>
+          <div className="min-w-0 flex-grow-1">
+            <p className="fw-bold mb-0 text-truncate" style={{ fontSize: '13px' }}>{toast.name}</p>
+            <small className="text-muted text-truncate d-block" style={{ fontSize: '12px' }}>{toast.text}</small>
+          </div>
+          <i className="bi bi-chat-dots text-success flex-shrink-0" style={{ fontSize: '18px' }}></i>
+        </div>
+      )}
+      <div className="row g-3 g-lg-4">
         {/* Orders List */}
-        <div className="col-lg-4 d-flex flex-column gap-3" style={{ maxHeight: 'calc(100vh - 140px)', overflowY: 'auto' }}>
+        <div className="col-12 col-lg-4 d-flex flex-column gap-3" style={{ maxHeight: 'calc(100vh - 140px)', overflowY: 'auto' }}>
           <div className="d-flex align-items-center gap-2">
             <i className="bi bi-truck text-success" style={{ fontSize: '20px' }}></i>
             <h5 className="fw-bold mb-0" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Deliveries</h5>
@@ -170,14 +233,14 @@ const PartnerDashboard: React.FC = () => {
                 </small>
                 {order.userId?.phone && <small className="text-muted d-flex align-items-center gap-1"><i className="bi bi-telephone" style={{ fontSize: '11px' }}></i> {order.userId.phone}</small>}
 
-                <div className="d-flex gap-2 mt-2">
+                <div className="d-flex gap-2 mt-2 flex-wrap">
                   {deliveringOrder !== order._id ? (
-                    <button onClick={(e) => { e.stopPropagation(); startDelivery(order._id); }} className="btn btn-sm flex-grow-1 fw-bold text-white rounded-3 py-2 d-flex align-items-center justify-content-center gap-1" style={{ fontSize: '12px', background: '#7c3aed' }}>
+                    <button onClick={(e) => { e.stopPropagation(); startDelivery(order._id); }} className="btn btn-sm flex-grow-1 fw-bold text-white rounded-3 py-2 d-flex align-items-center justify-content-center gap-1" style={{ fontSize: '12px', background: '#7c3aed', minWidth: '110px' }}>
                       <i className="bi bi-play-circle"></i> Start Delivery
                     </button>
                   ) : (
                     <>
-                      <button onClick={(e) => { e.stopPropagation(); setShowDeliverModal(order._id); }} className="btn btn-sm flex-grow-1 fw-bold text-white rounded-3 py-2 fc-primary d-flex align-items-center justify-content-center gap-1" style={{ fontSize: '12px' }}>
+                      <button onClick={(e) => { e.stopPropagation(); setShowDeliverModal(order._id); }} className="btn btn-sm flex-grow-1 fw-bold text-white rounded-3 py-2 fc-primary d-flex align-items-center justify-content-center gap-1" style={{ fontSize: '12px', minWidth: '110px' }}>
                         <i className="bi bi-check-circle"></i> Delivered
                       </button>
                       <div className="d-flex align-items-center gap-1 px-2 rounded-3" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
@@ -186,8 +249,11 @@ const PartnerDashboard: React.FC = () => {
                       </div>
                     </>
                   )}
-                  <button onClick={(e) => { e.stopPropagation(); openChat(order); }} className="btn btn-sm rounded-3 p-2" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                  <button onClick={(e) => { e.stopPropagation(); openChat(order); }} className="btn btn-sm rounded-3 p-2 position-relative" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
                     <i className="bi bi-chat-dots text-muted"></i>
+                    {newMessageOrderId === order._id && (
+                      <span className="position-absolute top-0 start-100 translate-middle" style={{ width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%', border: '2px solid white' }}></span>
+                    )}
                   </button>
                 </div>
               </div>
@@ -196,11 +262,11 @@ const PartnerDashboard: React.FC = () => {
         </div>
 
         {/* Chat Panel */}
-        <div className="col-lg-8 d-flex flex-column">
+        <div className="col-12 col-lg-8 d-flex flex-column">
           <div className="card border-0 shadow-sm rounded-4 flex-grow-1 d-flex flex-column overflow-hidden">
             {activeOrder ? (
               <>
-                <div className="card-header border-0 p-3 d-flex align-items-center justify-content-between" style={{ background: '#ecfdf5' }}>
+                <div className="card-header border-0 p-3 d-flex align-items-center justify-content-between flex-wrap gap-2" style={{ background: '#ecfdf5' }}>
                   <div className="d-flex align-items-center gap-3">
                     <div className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style={{ width: '40px', height: '40px', fontSize: '14px', background: 'linear-gradient(135deg, #059669, #10b981)' }}>
                       {activeOrder.userId?.name?.[0]?.toUpperCase()}
@@ -299,8 +365,8 @@ const PartnerDashboard: React.FC = () => {
 
       {/* Delivery Proof Modal */}
       {showDeliverModal && (
-        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1060 }}>
-          <div className="card border-0 shadow-lg rounded-4 p-4 animate-scale-in" style={{ maxWidth: '400px', width: '100%' }}>
+        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-end align-items-md-center justify-content-center p-0 p-md-3" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1060 }}>
+          <div className="card border-0 shadow-lg rounded-top-4 rounded-md-4 p-4 animate-scale-in" style={{ maxWidth: '400px', width: '100%', borderRadius: '16px 16px 0 0' }}>
             <div className="d-flex align-items-center justify-content-between mb-3">
               <h5 className="fw-bold mb-0" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Confirm Delivery</h5>
               <button onClick={() => { setShowDeliverModal(null); setDeliveryImage(null); deliveryImageRef.current = null; }} className="btn btn-sm text-muted border-0"><i className="bi bi-x-lg"></i></button>
