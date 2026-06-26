@@ -220,7 +220,7 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
 
       {/* Map Preview */}
       {showMap && selectedLocation && (
-        <div className="mt-2 rounded-3 overflow-hidden" style={{ border: '1px solid #e5e7eb', height: '160px' }}>
+        <div className="mt-2 rounded-3 overflow-hidden d-none d-sm-block" style={{ border: '1px solid #e5e7eb', height: '160px' }}>
           <MapContainer
             center={[selectedLocation.lat, selectedLocation.lng]}
             zoom={16}

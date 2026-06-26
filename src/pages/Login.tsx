@@ -122,9 +122,9 @@ const Login: React.FC = () => {
       </div>
 
       {/* Right Panel */}
-      <div className="d-flex align-items-center justify-content-center flex-grow-1 p-4">
+      <div className="d-flex align-items-center justify-content-center flex-grow-1 p-3 p-md-4">
         <div style={{ width: '100%', maxWidth: '420px' }} className="animate-fade-in">
-          <div className="d-flex d-lg-none align-items-center gap-3 mb-5 justify-content-center">
+          <div className="d-flex d-lg-none align-items-center gap-3 mb-4 mb-md-5 justify-content-center">
             <div className="d-flex align-items-center justify-content-center rounded-3" style={{ width: '40px', height: '40px', background: 'linear-gradient(135deg, #059669, #10b981)' }}>
               <i className="bi bi-bag-check text-white"></i>
             </div>
@@ -136,7 +136,7 @@ const Login: React.FC = () => {
             <p className="text-muted" style={{ fontSize: '15px' }}>Sign in to your account to continue shopping</p>
           </div>
 
-          <div className="card border-0 shadow-sm p-4 rounded-4">
+          <div className="card border-0 shadow-sm p-3 p-md-4 rounded-4">
             {error && (
               <div className="alert d-flex align-items-center gap-2 mb-3" style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '10px', fontSize: '13px' }}>
                 <i className="bi bi-exclamation-circle-fill"></i>

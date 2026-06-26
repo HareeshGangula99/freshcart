@@ -238,7 +238,7 @@ const Profile: React.FC = () => {
       )}
 
       {/* Profile Card */}
-      <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+      <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 profile-header-card">
         <div style={{ height: '96px', background: 'linear-gradient(135deg, #065f46, #059669, #10b981)' }} />
         <div className="card-body" style={{ marginTop: '-40px' }}>
           <div className="d-flex align-items-end gap-3 mb-3">
@@ -280,7 +280,7 @@ const Profile: React.FC = () => {
             {orders.map(order => (
               <div key={order._id} className="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div className="card-body p-3 d-flex align-items-center justify-content-between flex-wrap gap-2 cursor-pointer" onClick={() => setExpandedOrder(expandedOrder === order._id ? null : order._id)}>
-                  <div className="d-flex align-items-center gap-3 flex-wrap">
+                  <div className="d-flex align-items-center gap-3 flex-wrap flex-grow-1 min-w-0">
                     <div className="rounded-3 d-flex align-items-center justify-content-center bg-success bg-opacity-10" style={{ width: '40px', height: '40px' }}>
                       <i className="bi bi-box text-success"></i>
                     </div>
@@ -367,7 +367,7 @@ const Profile: React.FC = () => {
       {/* Chat Modal */}
       {chatOrder && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-end align-items-md-center justify-content-center p-0 p-md-3" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1060 }}>
-          <div className="card border-0 shadow-lg rounded-top-4 rounded-md-4 d-flex flex-column animate-scale-in" style={{ width: '100%', maxWidth: '420px', height: '85vh', maxHeight: '480px', borderRadius: '16px 16px 0 0' }}>
+          <div className="card border-0 shadow-lg rounded-top-4 rounded-md-4 d-flex flex-column animate-scale-in" style={{ width: '100%', maxWidth: '420px', height: '100vh', maxHeight: '100vh', borderRadius: '0' }}>
               <div className="card-header d-flex align-items-center justify-content-between border-0 p-3" style={{ background: '#ecfdf5' }}>
                 <div className="d-flex align-items-center gap-3 min-w-0">
                   <div className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0" style={{ width: '36px', height: '36px', fontSize: '13px', background: 'linear-gradient(135deg, #059669, #10b981)' }}>
@@ -411,7 +411,7 @@ const Profile: React.FC = () => {
       {/* Tracking Modal */}
       {trackingOrder && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-end align-items-md-center justify-content-center p-0 p-md-3" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1060 }} onClick={(e) => { if (e.target === e.currentTarget) closeTracking(); }}>
-          <div className="card border-0 shadow-lg rounded-top-4 rounded-md-4 d-flex flex-column animate-scale-in" style={{ width: '100%', maxWidth: '500px', height: '90vh', maxHeight: '700px', borderRadius: '16px 16px 0 0' }}>
+          <div className="card border-0 shadow-lg rounded-top-4 rounded-md-4 d-flex flex-column animate-scale-in" style={{ width: '100%', maxWidth: '500px', height: '100vh', maxHeight: '100vh', borderRadius: '0' }}>
             {/* Header */}
             <div className="card-header border-0 p-0" style={{ borderRadius: '16px 16px 0 0', position: 'relative', zIndex: 1100 }}>
               {/* Delivery Partner Info Bar */}

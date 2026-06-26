@@ -353,8 +353,8 @@ const AdminDashboard: React.FC = () => {
   );
 
   const renderProductForm = (onSubmit: (e: React.FormEvent) => void, data: any, setData: any, title: string) => (
-    <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3 p-sm-3" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1060 }}>
-      <div className="card border-0 shadow-lg rounded-4 p-4 animate-scale-in" style={{ maxWidth: '480px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+    <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-end align-items-md-center justify-content-center p-0 p-sm-3" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1060 }}>
+      <div className="card border-0 shadow-lg rounded-top-4 rounded-md-4 p-3 p-sm-4 animate-scale-in" style={{ maxWidth: '480px', width: '100%', maxHeight: '90vh', overflowY: 'auto', borderRadius: '16px 16px 0 0' }}>
         <div className="d-flex align-items-center justify-content-between mb-3">
           <h5 className="fw-bold mb-0" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{title}</h5>
           <button onClick={() => { setShowProductForm(false); setShowEditForm(false); setEditProduct(null); }} className="btn btn-sm text-muted border-0"><i className="bi bi-x-lg"></i></button>
@@ -439,7 +439,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="d-flex gap-1 p-1 rounded-3 mb-4 hide-scrollbar" style={{ background: 'white', border: '1px solid #e5e7eb', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <div className="d-flex gap-1 p-1 rounded-3 mb-3 mb-md-4 hide-scrollbar" style={{ background: 'white', border: '1px solid #e5e7eb', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {tabs.map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
             className={`btn d-flex align-items-center gap-2 fw-medium justify-content-center rounded-2 py-2 flex-shrink-0 ${activeTab === tab.id ? 'text-white' : 'text-muted'}`}
@@ -461,7 +461,7 @@ const AdminDashboard: React.FC = () => {
       {/* Bulk Add Modal */}
       {showBulkForm && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-end align-items-md-center justify-content-center p-0 p-md-3" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1060 }}>
-          <div className="card border-0 shadow-lg rounded-top-4 rounded-md-4 p-4 animate-scale-in" style={{ maxWidth: '700px', width: '100%', maxHeight: '90vh', overflowY: 'auto', borderRadius: '16px 16px 0 0' }}>
+          <div className="card border-0 shadow-lg rounded-top-4 rounded-md-4 p-3 p-md-4 animate-scale-in" style={{ maxWidth: '700px', width: '100%', maxHeight: '90vh', overflowY: 'auto', borderRadius: '16px 16px 0 0' }}>
             <div className="d-flex align-items-center justify-content-between mb-3">
               <div>
                 <h5 className="fw-bold mb-0" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Bulk Add Products</h5>
@@ -529,11 +529,11 @@ const AdminDashboard: React.FC = () => {
       {activeTab === 'products' && (
         <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
           <div className="p-3 d-flex gap-2 align-items-center flex-wrap flex-sm-nowrap" style={{ borderBottom: '1px solid #f0f0f0' }}>
-            <div className="position-relative flex-grow-1">
+            <div className="position-relative flex-grow-1" style={{ minWidth: '150px' }}>
               <i className="bi bi-search position-absolute" style={{ left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: '13px' }}></i>
               <input type="text" className="form-control" style={{ paddingLeft: '36px', fontSize: '13px', border: '1px solid #e5e7eb', borderRadius: '8px' }} placeholder="Search products..." value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setPage(1); }} />
             </div>
-            <select className="form-select" style={{ width: 'auto', fontSize: '13px', border: '1px solid #e5e7eb', borderRadius: '8px' }} value={filterCategory} onChange={e => { setFilterCategory(e.target.value); setPage(1); }}>
+            <select className="form-select flex-shrink-0" style={{ width: 'auto', fontSize: '13px', border: '1px solid #e5e7eb', borderRadius: '8px' }} value={filterCategory} onChange={e => { setFilterCategory(e.target.value); setPage(1); }}>
               <option value="">All Categories</option>
               {categories.map(c => <option key={c} value={c}>{c}</option>)}
             </select>

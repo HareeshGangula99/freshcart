@@ -68,19 +68,22 @@ const Home: React.FC = () => {
   return (
     <div className="animate-fade-in">
       {/* Hero */}
-      <div className="fc-hero mb-5">
+      <div className="fc-hero mb-4 mb-md-5">
         <div className="position-relative" style={{ zIndex: 10 }}>
-          <div className="d-flex align-items-center gap-2 mb-3">
+          <div className="d-flex align-items-center gap-2 mb-2 mb-md-3">
             <div className="d-flex align-items-center justify-content-center rounded-2" style={{ padding: '4px 12px', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(4px)' }}>
               <i className="bi bi-stars" style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px' }}></i>
               <small style={{ fontWeight: 600, color: 'rgba(255,255,255,0.9)', marginLeft: '6px', fontSize: '12px' }}>Premium Quality</small>
             </div>
           </div>
-          <h1 className="fw-bold mb-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-1px', lineHeight: 1.1 }}>
+          <h1 className="fw-bold mb-2 mb-md-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-1px', lineHeight: 1.1 }}>
             Fresh Market
           </h1>
-          <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.75)', maxWidth: '480px', lineHeight: 1.7, marginBottom: '28px' }}>
+          <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.75)', maxWidth: '480px', lineHeight: 1.7, marginBottom: '20px' }} className="d-none d-sm-block">
             Handpicked organic produce delivered to your doorstep. Quality you can taste, freshness you can trust.
+          </p>
+          <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, marginBottom: '20px' }} className="d-sm-none">
+            Fresh produce delivered to your doorstep.
           </p>
           <div className="d-flex align-items-center gap-3 gap-md-5 flex-wrap">
             {[
@@ -89,11 +92,11 @@ const Home: React.FC = () => {
               { icon: 'bi-clock-history', text: '30 min', sub: 'Avg delivery' },
             ].map((item, i) => (
               <div key={i} className="d-flex align-items-center gap-2">
-                <div className="d-flex align-items-center justify-content-center rounded-3" style={{ width: '38px', height: '38px', background: 'rgba(255,255,255,0.12)' }}>
-                  <i className={`bi ${item.icon}`} style={{ color: 'white', fontSize: '15px' }}></i>
+                <div className="d-flex align-items-center justify-content-center rounded-3" style={{ width: '36px', height: '36px', background: 'rgba(255,255,255,0.12)' }}>
+                  <i className={`bi ${item.icon}`} style={{ color: 'white', fontSize: '14px' }}></i>
                 </div>
                 <div>
-                  <p className="fw-bold mb-0" style={{ fontSize: '13px', color: 'white' }}>{item.text}</p>
+                  <p className="fw-bold mb-0" style={{ fontSize: '12px', color: 'white' }}>{item.text}</p>
                   <small style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>{item.sub}</small>
                 </div>
               </div>
@@ -103,15 +106,15 @@ const Home: React.FC = () => {
       </div>
 
       {/* Search Bar */}
-      <div className="position-relative mb-4">
+      <div className="position-relative mb-3 mb-md-4">
         <div className="position-absolute d-flex align-items-center justify-content-center" style={{ left: '16px', top: '50%', transform: 'translateY(-50%)', width: '20px', height: '20px' }}>
           <i className="bi bi-search" style={{ color: '#9ca3af', fontSize: '16px' }}></i>
         </div>
         <input
           type="text"
-          placeholder="Search for fresh fruits, vegetables, dairy..."
+          placeholder="Search fresh fruits, veggies..."
           className="form-control fc-input"
-          style={{ height: '52px', paddingLeft: '48px', borderRadius: '16px', fontSize: '14px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+          style={{ height: '48px', paddingLeft: '48px', borderRadius: '14px', fontSize: '14px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -127,7 +130,7 @@ const Home: React.FC = () => {
       </div>
 
       {/* Category Filters */}
-      <div className="d-flex align-items-center gap-2 overflow-x-auto hide-scrollbar pb-2 mb-4">
+      <div className="d-flex align-items-center gap-2 overflow-x-auto hide-scrollbar pb-2 mb-3 mb-md-4">
         <button
           onClick={() => setCategory('')}
           className={`category-pill flex-shrink-0 ${category === '' ? 'active' : ''}`}
@@ -164,11 +167,11 @@ const Home: React.FC = () => {
 
       {/* Product Grid */}
       {loading ? (
-        <div className="product-grid row g-4">
+        <div className="product-grid row g-3 g-md-4">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="col-12 col-sm-6 col-lg-4 col-xl-3">
               <div className="card border-0 fc-card h-100">
-                <div className="skeleton" style={{ height: '220px', borderRadius: '16px 16px 0 0' }}></div>
+                <div className="skeleton" style={{ height: '180px', borderRadius: '16px 16px 0 0' }}></div>
                 <div className="card-body p-4">
                   <div className="skeleton mb-2" style={{ height: '12px', width: '60px', borderRadius: '6px' }}></div>
                   <div className="skeleton mb-2" style={{ height: '18px', width: '80%', borderRadius: '6px' }}></div>
@@ -183,7 +186,7 @@ const Home: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="product-grid row g-4">
+        <div className="product-grid row g-3 g-md-4">
           {products.map((product, index) => {
             const meta = getCategoryMeta(product.category);
             const isOutOfStock = product.stockQuantity === 0;
@@ -191,7 +194,7 @@ const Home: React.FC = () => {
               <div key={product._id} className="col-12 col-sm-6 col-lg-4 col-xl-3" style={{ animationDelay: `${index * 0.05}s` }}>
                 <div className="card border-0 fc-card h-100 overflow-hidden animate-slide-up d-flex flex-column">
                   {/* Product Image */}
-                  <div className="product-img-wrapper position-relative flex-shrink-0" style={{ height: '220px', background: meta.gradient }}>
+                  <div className="product-img-wrapper position-relative flex-shrink-0" style={{ height: '180px', background: meta.gradient }}>
                     <img
                       src={product.imageURL ? (product.imageURL.startsWith('http') ? product.imageURL : `${API_BASE}${product.imageURL}`) : `https://placehold.co/400x300/f0fdf4/16a34a?text=${encodeURIComponent(meta.emoji)}`}
                       alt={product.name}
@@ -226,7 +229,7 @@ const Home: React.FC = () => {
                   </div>
 
                   {/* Product Info */}
-                  <div className="card-body d-flex flex-column p-4">
+                  <div className="card-body d-flex flex-column p-3 p-md-4">
                     <h6 className="fw-bold text-dark mb-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '15px', lineHeight: 1.3 }}>
                       {product.name}
                     </h6>

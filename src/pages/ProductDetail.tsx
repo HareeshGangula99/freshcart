@@ -42,8 +42,8 @@ const ProductDetail: React.FC = () => {
       <div className="skeleton mb-3" style={{ height: '16px', width: '120px', borderRadius: '6px' }}></div>
       <div className="card border-0 shadow-soft rounded-4 overflow-hidden">
         <div className="row g-0">
-          <div className="col-md-6"><div className="skeleton" style={{ height: '300px', borderRadius: 0 }}></div></div>
-          <div className="col-md-6 p-3 p-md-5">
+          <div className="col-12 col-md-6"><div className="skeleton" style={{ height: '220px', borderRadius: 0 }}></div></div>
+          <div className="col-12 col-md-6 p-3 p-md-5">
             <div className="skeleton mb-3" style={{ height: '14px', width: '80px', borderRadius: '6px' }}></div>
             <div className="skeleton mb-3" style={{ height: '28px', width: '75%', borderRadius: '6px' }}></div>
             <div className="skeleton mb-3" style={{ height: '16px', width: '100%', borderRadius: '6px' }}></div>
@@ -83,8 +83,8 @@ const ProductDetail: React.FC = () => {
       <div className="card border-0 shadow-soft rounded-4 overflow-hidden">
         <div className="row g-0">
           {/* Image */}
-          <div className="col-md-6">
-            <div className="position-relative" style={{ minHeight: '300px', height: '100%', background: '#f9fafb' }}>
+          <div className="col-12 col-md-6">
+            <div className="position-relative product-detail-img" style={{ minHeight: '220px', height: '100%', background: '#f9fafb' }}>
               <img
                 src={product.imageURL ? (product.imageURL.startsWith('http') ? product.imageURL : `${API_BASE}${product.imageURL}`) : `https://placehold.co/600x500/f0fdf4/16a34a?text=${encodeURIComponent(product.name)}`}
                 alt={product.name}
@@ -99,7 +99,7 @@ const ProductDetail: React.FC = () => {
           </div>
 
           {/* Details */}
-          <div className="col-md-6 p-3 p-md-5 d-flex flex-column">
+          <div className="col-12 col-md-6 p-3 p-md-5 d-flex flex-column">
             {/* Category */}
             <span className="badge fw-semibold mb-3 align-self-start" style={{ background: '#f0fdf4', color: '#059669', borderRadius: '8px', fontSize: '12px', padding: '5px 12px' }}>
               <i className="bi bi-tag me-1"></i> {product.category}
@@ -175,7 +175,7 @@ const ProductDetail: React.FC = () => {
             )}
 
             {/* Trust Badges */}
-            <div className="d-flex align-items-center gap-3 gap-md-5 mt-auto pt-4 flex-wrap" style={{ borderTop: '1px solid #f3f4f6' }}>
+            <div className="d-flex align-items-center gap-3 gap-md-5 mt-auto pt-3 pt-md-4 flex-wrap" style={{ borderTop: '1px solid #f3f4f6' }}>
               {[
                 { icon: 'bi-shield-check', text: 'Secure Payment', color: '#059669' },
                 { icon: 'bi-truck', text: '30 Min Delivery', color: '#2563eb' },

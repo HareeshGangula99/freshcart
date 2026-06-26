@@ -13,7 +13,54 @@ interface MenuItem {
   subMenu?: MenuItem[];
 }
 
-const INITIAL_MENU: MenuItem[] = [
+const renderFormattedText = (text: string): React.ReactNode[] => {
+  const lines = text.split('\n');
+  return lines.map((line, i) => {
+    const parts: React.ReactNode[] = [];
+    let remaining = line;
+    let key = 0;
+
+    while (remaining.length > 0) {
+      const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
+      const italicMatch = remaining.match(/\*(.+?)\*/);
+
+      let firstMatch = null;
+      let matchType = '';
+
+      if (boldMatch && (!italicMatch || (boldMatch.index || 0) <= (italicMatch.index || 0))) {
+        firstMatch = boldMatch;
+        matchType = 'bold';
+      } else if (italicMatch) {
+        firstMatch = italicMatch;
+        matchType = 'italic';
+      }
+
+      if (!firstMatch) {
+        parts.push(remaining);
+        break;
+      }
+
+      const idx = firstMatch.index || 0;
+      if (idx > 0) parts.push(remaining.substring(0, idx));
+
+      if (matchType === 'bold') {
+        parts.push(<strong key={key++}>{firstMatch[1]}</strong>);
+      } else {
+        parts.push(<em key={key++}>{firstMatch[1]}</em>);
+      }
+      remaining = remaining.substring(idx + firstMatch[0].length);
+    }
+
+    return (
+      <React.Fragment key={i}>
+        {i > 0 && <br />}
+        {parts}
+      </React.Fragment>
+    );
+  });
+};
+
+const USER_MENU: MenuItem[] = [
   {
     label: 'Track Order',
     icon: 'bi-geo-alt',
@@ -43,7 +90,7 @@ const INITIAL_MENU: MenuItem[] = [
   },
 ];
 
-const ORDER_MENU: MenuItem[] = [
+const USER_ORDER_MENU: MenuItem[] = [
   {
     label: 'Track Order',
     icon: 'bi-geo-alt',
@@ -78,14 +125,144 @@ const ORDER_MENU: MenuItem[] = [
   },
 ];
 
-const GREETING: Message = {
-  role: 'assistant',
-  content: 'Hi! I\'m FreshCart Assistant. How can I help you today? You can ask me about orders, refunds, delivery, or any other queries.',
+const ADMIN_MENU: MenuItem[] = [
+  {
+    label: 'Products',
+    icon: 'bi-box-seam',
+    message: '',
+    subMenu: [
+      { label: 'Add Product', icon: 'bi-plus-circle', message: 'How do I add a new product?' },
+      { label: 'Edit Product', icon: 'bi-pencil', message: 'How do I edit a product?' },
+      { label: 'Delete Product', icon: 'bi-trash', message: 'How do I delete a product?' },
+      { label: 'View All Products', icon: 'bi-list', message: 'Show me all products' },
+    ],
+  },
+  {
+    label: 'Categories',
+    icon: 'bi-grid',
+    message: '',
+    subMenu: [
+      { label: 'Add Category', icon: 'bi-plus-circle', message: 'How do I add a new category?' },
+      { label: 'Delete Category', icon: 'bi-trash', message: 'How do I delete a category?' },
+      { label: 'View Categories', icon: 'bi-list', message: 'Show me all categories' },
+    ],
+  },
+  {
+    label: 'Approvals',
+    icon: 'bi-person-check',
+    message: 'Show me pending user approvals',
+  },
+  {
+    label: 'Delivery Partners',
+    icon: 'bi-person-video2',
+    message: '',
+    subMenu: [
+      { label: 'Create Partner', icon: 'bi-plus-circle', message: 'How do I create a delivery partner?' },
+      { label: 'View Partners', icon: 'bi-list', message: 'Show me all delivery partners' },
+    ],
+  },
+  {
+    label: 'Live Tracking',
+    icon: 'bi-geo-alt',
+    message: 'Show me all active deliveries for live tracking',
+  },
+  {
+    label: 'Dashboard Help',
+    icon: 'bi-question-circle',
+    message: 'What can I do in the admin dashboard?',
+  },
+];
+
+const MANAGER_MENU: MenuItem[] = [
+  {
+    label: 'Pending Orders',
+    icon: 'bi-clock-history',
+    message: 'Show me all pending orders',
+  },
+  {
+    label: 'Dispatch Order',
+    icon: 'bi-truck',
+    message: 'How do I dispatch an order?',
+  },
+  {
+    label: 'Categories',
+    icon: 'bi-grid',
+    message: 'Show me all categories',
+  },
+  {
+    label: 'Inventory',
+    icon: 'bi-box-seam',
+    message: '',
+    subMenu: [
+      { label: 'View Inventory', icon: 'bi-list', message: 'Show me current inventory levels' },
+      { label: 'Low Stock', icon: 'bi-exclamation-triangle', message: 'Show me low stock products' },
+      { label: 'Update Stock', icon: 'bi-pencil', message: 'milk 50' },
+    ],
+  },
+  {
+    label: 'Dashboard Help',
+    icon: 'bi-question-circle',
+    message: 'What can I do in the manager dashboard?',
+  },
+];
+
+const PARTNER_MENU: MenuItem[] = [
+  {
+    label: 'My Deliveries',
+    icon: 'bi-list-task',
+    message: 'Show me my active deliveries',
+  },
+  {
+    label: 'Start Delivery',
+    icon: 'bi-play-circle',
+    message: 'How do I start a delivery?',
+  },
+  {
+    label: 'Mark Delivered',
+    icon: 'bi-check-circle',
+    message: 'How do I mark an order as delivered?',
+  },
+  {
+    label: 'Upload Proof',
+    icon: 'bi-camera',
+    message: 'How do I upload delivery proof photo?',
+  },
+  {
+    label: 'Live Tracking',
+    icon: 'bi-geo-alt',
+    message: 'How does live location tracking work?',
+  },
+  {
+    label: 'Chat with Customer',
+    icon: 'bi-chat-dots',
+    message: 'How do I chat with the customer?',
+  },
+  {
+    label: 'Help',
+    icon: 'bi-question-circle',
+    message: 'What can I do in the partner dashboard?',
+  },
+];
+
+const GREETINGS: Record<string, string> = {
+  ADMIN: "Hi! I'm FreshCart Admin Assistant. I can help you with product management, category management, user approvals, delivery partners, and live tracking. What do you need?",
+  STORE_MANAGER: "Hi! I'm FreshCart Manager Assistant. I can help you with order dispatch, inventory management, and stock updates. What do you need?",
+  DELIVERY_PARTNER: "Hi! I'm FreshCart Delivery Assistant. I can help you with deliveries, marking orders delivered, uploading proof, and live tracking. What do you need?",
+  USER: "Hi! I'm FreshCart Assistant. How can I help you today? You can ask me about orders, refunds, delivery, or any other queries.",
+};
+
+const getMenusForRole = (role: string) => {
+  switch (role) {
+    case 'ADMIN': return { initial: ADMIN_MENU, afterQuery: ADMIN_MENU };
+    case 'STORE_MANAGER': return { initial: MANAGER_MENU, afterQuery: MANAGER_MENU };
+    case 'DELIVERY_PARTNER': return { initial: PARTNER_MENU, afterQuery: PARTNER_MENU };
+    default: return { initial: USER_MENU, afterQuery: USER_ORDER_MENU };
+  }
 };
 
 const ChatBot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([GREETING]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [activeMenu, setActiveMenu] = useState<'main' | 'orderIssue'>('main');
   const [showMenu, setShowMenu] = useState(true);
   const [orderQueryMade, setOrderQueryMade] = useState(false);
@@ -93,6 +270,25 @@ const ChatBot: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const messagesRef = useRef<Message[]>([]);
+
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRole: string = user.role || 'USER';
+
+  const greeting: Message = {
+    role: 'assistant',
+    content: GREETINGS[userRole] || GREETINGS.USER,
+  };
+
+  useEffect(() => {
+    if (messages.length === 0) {
+      setMessages([greeting]);
+    }
+  }, []);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -109,9 +305,10 @@ const ChatBot: React.FC = () => {
   }, [isOpen]);
 
   const handleBackToMenu = () => {
-    setMessages([GREETING]);
+    setMessages([greeting]);
     setActiveMenu('main');
     setShowMenu(true);
+    setOrderQueryMade(false);
     setInput('');
   };
 
@@ -142,11 +339,15 @@ const ChatBot: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const history = messages.map((m) => ({ role: m.role, content: m.content }));
+      const history = messagesRef.current.map((m) => ({ role: m.role, content: m.content }));
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (user.token) {
+        headers['Authorization'] = `Bearer ${user.token}`;
+      }
       const res = await fetch(`${API_URL}/chatbot`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text.trim(), history }),
+        headers,
+        body: JSON.stringify({ message: text.trim(), history, role: userRole }),
       });
 
       const data = await res.json();
@@ -173,12 +374,18 @@ const ChatBot: React.FC = () => {
     sendMessage(input);
   };
 
+  const menus = getMenusForRole(userRole);
+
   const renderMenuButtons = () => {
     if (!showMenu) return null;
 
-    const items = activeMenu === 'orderIssue'
-      ? (orderQueryMade ? ORDER_MENU : INITIAL_MENU).find((m) => m.subMenu)?.subMenu || []
-      : orderQueryMade ? ORDER_MENU : INITIAL_MENU;
+    let items: MenuItem[];
+    if (activeMenu === 'orderIssue') {
+      const currentMenu = orderQueryMade ? menus.afterQuery : menus.initial;
+      items = currentMenu.find((m) => m.subMenu)?.subMenu || [];
+    } else {
+      items = orderQueryMade ? menus.afterQuery : menus.initial;
+    }
 
     return (
       <div
@@ -265,16 +472,16 @@ const ChatBot: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
         style={{
           position: 'fixed',
-          bottom: isOpen ? 'auto' : '20px',
-          right: isOpen ? '16px' : '20px',
-          top: isOpen ? '16px' : 'auto',
-          width: '52px',
-          height: '52px',
+          bottom: isOpen ? 'auto' : '16px',
+          right: isOpen ? '12px' : '16px',
+          top: isOpen ? '12px' : 'auto',
+          width: '48px',
+          height: '48px',
           borderRadius: '50%',
           background: 'linear-gradient(135deg, #059669, #10b981)',
           border: 'none',
           color: 'white',
-          fontSize: '22px',
+          fontSize: '20px',
           cursor: 'pointer',
           boxShadow: '0 4px 20px rgba(5, 150, 105, 0.4)',
           zIndex: 10001,
@@ -390,7 +597,7 @@ const ChatBot: React.FC = () => {
                     wordBreak: 'break-word',
                   }}
                 >
-                  {msg.content}
+                  {msg.role === 'user' ? msg.content : renderFormattedText(msg.content)}
                 </div>
               </div>
             ))}

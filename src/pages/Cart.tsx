@@ -91,7 +91,7 @@ const Cart: React.FC = () => {
 
       {cart.length === 0 ? (
         /* Empty Cart */
-        <div className="card border-0 shadow-soft p-5 text-center rounded-4" style={{ maxWidth: '480px', margin: '0 auto' }}>
+        <div className="card border-0 shadow-soft p-4 p-md-5 text-center rounded-4" style={{ maxWidth: '480px', margin: '0 auto' }}>
           <div className="d-flex align-items-center justify-content-center mx-auto mb-4 rounded-circle" style={{ width: '100px', height: '100px', background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)' }}>
             <span style={{ fontSize: '48px' }}>🛒</span>
           </div>
@@ -102,7 +102,7 @@ const Cart: React.FC = () => {
           </button>
         </div>
       ) : (
-        <div className="row g-4">
+        <div className="row g-3 g-lg-4">
           {/* Cart Items */}
           <div className="col-lg-8">
             <div className="d-flex flex-column gap-3">

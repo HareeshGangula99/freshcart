@@ -137,7 +137,7 @@ const Layout: React.FC = () => {
           <div style={{ width: '40px' }}></div>
         </div>
 
-        <div className="container-fluid px-3 py-3 px-lg-5 py-lg-5 mt-mobile" style={{ maxWidth: '1280px', margin: '0 auto' }}>
+        <div className="container-fluid px-2 px-sm-3 py-3 px-lg-5 py-lg-5 mt-mobile" style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <Outlet />
         </div>
       </main>

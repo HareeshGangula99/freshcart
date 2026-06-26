@@ -76,10 +76,10 @@ const OrderConfirm: React.FC = () => {
           </div>
         )}
 
-        <div className="d-flex align-items-center justify-content-between mb-4 px-2">
+        <div className="d-flex align-items-center justify-content-between mb-4 px-1 px-sm-2 steps-container">
           {steps.map((step, i) => (
-            <div key={step.label} className="d-flex flex-column align-items-center gap-2">
-              <div className={`rounded-circle d-flex align-items-center justify-content-center ${i === 0 ? 'bg-success text-white shadow-sm' : 'bg-light text-muted border'}`} style={{ width: '36px', height: '36px' }}>
+            <div key={step.label} className="d-flex flex-column align-items-center gap-1 gap-md-2">
+              <div className={`rounded-circle d-flex align-items-center justify-content-center ${i === 0 ? 'bg-success text-white shadow-sm' : 'bg-light text-muted border'}`} style={{ width: '32px', height: '32px' }}>
                 <i className={`bi ${step.icon}`}></i>
               </div>
               <small className={`fw-medium ${i === 0 ? 'text-success' : 'text-muted'}`} style={{ fontSize: '11px' }}>{step.label}</small>

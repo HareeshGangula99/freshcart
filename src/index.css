@@ -329,8 +329,8 @@ body {
   }
   .mt-mobile {
     margin-top: 56px !important;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
   }
 }
 
@@ -461,6 +461,21 @@ body {
 }
 
 /* Mobile: ChatBot window */
+@media (max-width: 575.98px) {
+  .chatbot-window-desktop {
+    position: fixed !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
 @media (min-width: 576px) {
   .chatbot-window-desktop {
     position: fixed !important;
@@ -542,5 +557,122 @@ body {
     width: 100%;
     justify-content: space-between;
     margin-top: 4px;
+  }
+}
+
+/* Mobile: Order confirm steps */
+@media (max-width: 480px) {
+  .steps-container {
+    gap: 4px !important;
+  }
+  .steps-container > div {
+    gap: 4px !important;
+  }
+}
+
+/* Mobile: Product detail image */
+@media (max-width: 767.98px) {
+  .product-detail-img {
+    min-height: 220px !important;
+    max-height: 300px !important;
+  }
+}
+
+/* Mobile: Profile header */
+@media (max-width: 575.98px) {
+  .profile-header-card .card-body {
+    padding: 12px !important;
+  }
+}
+
+/* Mobile: Admin/Manager form modals */
+@media (max-width: 575.98px) {
+  .modal-mobile-bottom {
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 90vh !important;
+  }
+}
+
+/* Mobile: Safe area for bottom bars */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .mobile-safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Mobile: Full width buttons */
+@media (max-width: 575.98px) {
+  .btn-block-mobile {
+    width: 100% !important;
+  }
+}
+
+/* Mobile: Reduce heading sizes */
+@media (max-width: 575.98px) {
+  h1 { font-size: 24px !important; }
+  h2 { font-size: 20px !important; }
+  h3 { font-size: 18px !important; }
+  h4 { font-size: 16px !important; }
+}
+
+/* Mobile: Table horizontal scroll hint */
+@media (max-width: 767.98px) {
+  .table-responsive {
+    position: relative;
+  }
+  .table-responsive::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 30px;
+    background: linear-gradient(to left, rgba(248,247,244,0.9), transparent);
+    pointer-events: none;
+    border-radius: 0 12px 12px 0;
+  }
+}
+
+/* Mobile: Fix Leaflet map z-index */
+@media (max-width: 767.98px) {
+  .leaflet-container {
+    z-index: 1 !important;
+  }
+  .leaflet-control-zoom {
+    z-index: 1000 !important;
+  }
+}
+
+/* Mobile: Order summary sticky fix */
+@media (max-width: 991.98px) {
+  .order-summary {
+    position: static !important;
+  }
+}
+
+/* Mobile: Chat/Modal fullscreen */
+@media (max-width: 575.98px) {
+  .modal-mobile-full {
+    width: 100% !important;
+    height: 100vh !important;
+    max-width: 100% !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+}
+
+/* Tablet: Adjust grid gaps */
+@media (min-width: 576px) and (max-width: 991.98px) {
+  .product-grid.row {
+    --bs-gutter-x: 16px;
+  }
+}
+
+/* Mobile: Fix overflow-x on chat panels */
+@media (max-width: 575.98px) {
+  .chat-panel-fullheight {
+    height: calc(100vh - 56px) !important;
+    max-height: calc(100vh - 56px) !important;
   }
 }

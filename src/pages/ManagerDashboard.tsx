@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { orderService, adminService, productService } from '../services/api';
 import { getSocket } from '../services/socket';
 import { API_BASE } from '../config';
@@ -14,6 +14,8 @@ const ManagerDashboard: React.FC = () => {
   const [dispatching, setDispatching] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'orders' | 'inventory'>('orders');
+  const [stockValues, setStockValues] = useState<Record<string, number>>({});
+  const stockTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const fetchData = useCallback(async () => {
     try {
@@ -22,8 +24,9 @@ const ManagerDashboard: React.FC = () => {
     } catch (err) { console.error('Fetch failed', err); }
   }, []);
 
+  useEffect(() => { fetchData(); }, [fetchData]);
+
   useEffect(() => {
-    fetchData();
     socket.on('order_confirmed', (data: { orderId: string; userName: string; amount: number }) => {
       setNotification(`New order from ${data.userName} — ₹${data.amount}`);
       fetchData();
@@ -32,7 +35,27 @@ const ManagerDashboard: React.FC = () => {
     return () => { socket.off('order_confirmed'); };
   }, [fetchData]);
 
-  const handleStockUpdate = async (id: string, qty: number) => { try { await productService.updateStock(id, { stockQuantity: qty }); fetchData(); } catch { alert('Stock update failed'); } };
+  useEffect(() => {
+    const map: Record<string, number> = {};
+    products.forEach(p => { map[p._id] = p.stockQuantity; });
+    setStockValues(map);
+  }, [products]);
+
+  const handleStockChange = useCallback((id: string, qty: number) => {
+    setStockValues(prev => ({ ...prev, [id]: qty }));
+    if (stockTimers.current[id]) clearTimeout(stockTimers.current[id]);
+    stockTimers.current[id] = setTimeout(async () => {
+      try { await productService.updateStock(id, { stockQuantity: qty }); } catch { alert('Stock update failed'); }
+    }, 800);
+  }, []);
+
+  const handleStockBlur = useCallback((id: string) => {
+    if (stockTimers.current[id]) { clearTimeout(stockTimers.current[id]); delete stockTimers.current[id]; }
+    const qty = stockValues[id];
+    if (qty !== undefined) {
+      productService.updateStock(id, { stockQuantity: qty }).catch(() => alert('Stock update failed'));
+    }
+  }, [stockValues]);
 
   const handleDispatch = async (orderId: string) => {
     if (!partnerId) return alert('Please select a delivery partner');
@@ -79,7 +102,7 @@ const ManagerDashboard: React.FC = () => {
         </button>
       </div>
 
-      <div className="d-flex gap-1 p-1 rounded-3 mb-4 hide-scrollbar" style={{ background: 'white', border: '1px solid #e5e7eb', overflowX: 'auto' }}>
+      <div className="d-flex gap-1 p-1 rounded-3 mb-3 mb-md-4 hide-scrollbar" style={{ background: 'white', border: '1px solid #e5e7eb', overflowX: 'auto' }}>
         {[
           { id: 'orders' as const, label: 'Pending Orders', icon: 'bi-cart3', count: orders.length },
           { id: 'inventory' as const, label: 'Inventory', icon: 'bi-box', count: products.length },
@@ -151,7 +174,7 @@ const ManagerDashboard: React.FC = () => {
                       <span className={`badge ${p.stockQuantity === 0 ? 'bg-danger bg-opacity-10 text-danger' : 'bg-success bg-opacity-10 text-success'}`} style={{ fontSize: '11px' }}>{p.stockQuantity} units</span>
                     </td>
                     <td className="px-4 py-3">
-                      <input type="number" className="form-control fc-input text-center" style={{ width: '80px', fontSize: '13px' }} value={p.stockQuantity} min={0} onChange={(e) => handleStockUpdate(p._id, Number(e.target.value))} />
+                      <input type="number" className="form-control fc-input text-center" style={{ width: '80px', fontSize: '13px' }} value={stockValues[p._id] ?? p.stockQuantity} min={0} onChange={(e) => handleStockChange(p._id, Number(e.target.value))} onBlur={() => handleStockBlur(p._id)} />
                     </td>
                   </tr>
                 ))}
@@ -164,7 +187,7 @@ const ManagerDashboard: React.FC = () => {
       {/* Dispatch Modal */}
       {selectedOrder && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-end align-items-md-center justify-content-center p-0 p-md-3" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1060 }}>
-          <div className="card border-0 shadow-lg rounded-top-4 rounded-md-4 p-4 animate-scale-in" style={{ maxWidth: '440px', width: '100%', borderRadius: '16px 16px 0 0' }}>
+          <div className="card border-0 shadow-lg rounded-top-4 rounded-md-4 p-3 p-md-4 animate-scale-in" style={{ maxWidth: '440px', width: '100%', borderRadius: '16px 16px 0 0' }}>
             <div className="d-flex align-items-center justify-content-between mb-3">
               <h5 className="fw-bold mb-0" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Dispatch Order</h5>
               <button onClick={() => { setSelectedOrder(null); setPartnerId(''); }} className="btn btn-sm text-muted border-0"><i className="bi bi-x-lg"></i></button>

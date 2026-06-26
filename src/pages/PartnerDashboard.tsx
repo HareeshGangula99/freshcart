@@ -23,6 +23,7 @@ const PartnerDashboard: React.FC = () => {
   const [partnerDistance, setPartnerDistance] = useState<{ distance: number; ETA: string; arrived: boolean } | null>(null);
   const [newMessageOrderId, setNewMessageOrderId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ name: string; text: string } | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const activeOrderRef = useRef<any>(null);
   const userRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -366,10 +367,10 @@ const PartnerDashboard: React.FC = () => {
       {/* Delivery Proof Modal */}
       {showDeliverModal && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-end align-items-md-center justify-content-center p-0 p-md-3" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1060 }}>
-          <div className="card border-0 shadow-lg rounded-top-4 rounded-md-4 p-4 animate-scale-in" style={{ maxWidth: '400px', width: '100%', borderRadius: '16px 16px 0 0' }}>
+          <div className="card border-0 shadow-lg rounded-top-4 rounded-md-4 p-3 p-md-4 animate-scale-in" style={{ maxWidth: '400px', width: '100%', borderRadius: '16px 16px 0 0' }}>
             <div className="d-flex align-items-center justify-content-between mb-3">
               <h5 className="fw-bold mb-0" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Confirm Delivery</h5>
-              <button onClick={() => { setShowDeliverModal(null); setDeliveryImage(null); deliveryImageRef.current = null; }} className="btn btn-sm text-muted border-0"><i className="bi bi-x-lg"></i></button>
+              <button onClick={() => { if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl); setShowDeliverModal(null); setDeliveryImage(null); setImagePreviewUrl(null); deliveryImageRef.current = null; }} className="btn btn-sm text-muted border-0"><i className="bi bi-x-lg"></i></button>
             </div>
             <p className="text-muted mb-3" style={{ fontSize: '13px' }}>Order #{showDeliverModal?.slice(-6).toUpperCase()}</p>
             <label className="form-label fw-medium" style={{ fontSize: '13px' }}>Delivery Photo (optional)</label>
@@ -378,16 +379,18 @@ const PartnerDashboard: React.FC = () => {
               {deliveryImage ? deliveryImage.name : 'Take or upload delivery photo'}
               <input type="file" accept="image/*" capture="environment" className="d-none" onChange={e => {
                 const file = e.target.files?.[0] || null;
+                if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
                 setDeliveryImage(file);
                 deliveryImageRef.current = file;
+                setImagePreviewUrl(file ? URL.createObjectURL(file) : null);
               }} />
             </label>
-            {deliveryImage && (
+            {deliveryImage && imagePreviewUrl && (
               <div className="mb-3">
-                <img src={URL.createObjectURL(deliveryImage)} alt="Delivery proof" className="rounded-3 w-100" style={{ maxHeight: '200px', objectFit: 'cover' }} />
+                <img src={imagePreviewUrl} alt="Delivery proof" className="rounded-3 w-100" style={{ maxHeight: '200px', objectFit: 'cover' }} />
               </div>
             )}
-            <button onClick={() => handleDeliver(showDeliverModal)} disabled={delivering === showDeliverModal} className="btn w-100 fw-bold text-white rounded-3 py-2 fc-primary d-flex align-items-center justify-content-center gap-2">
+            <button onClick={() => { if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl); handleDeliver(showDeliverModal); }} disabled={delivering === showDeliverModal} className="btn w-100 fw-bold text-white rounded-3 py-2 fc-primary d-flex align-items-center justify-content-center gap-2">
               {delivering === showDeliverModal ? (
                 <><span className="spinner-border spinner-border-sm"></span> Confirming...</>
               ) : (
@@ -398,12 +401,6 @@ const PartnerDashboard: React.FC = () => {
         </div>
       )}
 
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.4; }
-        }
-      `}</style>
     </div>
   );
 };
