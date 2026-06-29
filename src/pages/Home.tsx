@@ -200,7 +200,7 @@ const Home: React.FC = () => {
           </div>
         ) : (
           <div className="product-rows-container">
-            {groupedProducts.map((group, groupIndex) => {
+            {groupedProducts.map((group) => {
               const meta = getCategoryMeta(group.name);
               return (
                 <div key={group.name} className="product-row-section">
@@ -220,7 +220,7 @@ const Home: React.FC = () => {
                   {/* Horizontal Scrollable Products Row */}
                   <div className="product-row-scroll">
                     <div className="product-row-inner">
-                      {group.products.map((product, index) => {
+                      {group.products.map((product) => {
                         const pMeta = getCategoryMeta(product.category);
                         const isOutOfStock = product.stockQuantity === 0;
                         return (
