@@ -196,7 +196,7 @@ const Home: React.FC = () => {
 
         {/* Category Filters */}
         <div className="category-filters-wrapper mt-2">
-          <div className="d-flex align-items-center gap-2 overflow-x-auto hide-scrollbar pb-1" style={{ touchAction: 'pan-x', overscrollBehaviorX: 'contain' }}>
+          <div className="d-flex align-items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
             <button
               onClick={() => setCategory('')}
               className={`category-pill flex-shrink-0 ${category === '' ? 'active' : ''}`}

@@ -102,11 +102,10 @@ body {
   -ms-overflow-style: none;
 }
 
-/* Prevent horizontal scroll containers from scrolling the page */
+/* Horizontal scroll container */
 .scroll-x-isolate {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -416,12 +415,9 @@ body {
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
-  overscroll-behavior-x: contain;
   scrollbar-width: none;
   -ms-overflow-style: none;
   padding: 0 12px;
-  will-change: scroll-position;
 }
 
 .product-row-scroll::-webkit-scrollbar {
