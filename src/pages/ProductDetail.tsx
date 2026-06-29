@@ -84,12 +84,10 @@ const ProductDetail: React.FC = () => {
         <div className="row g-0">
           {/* Image */}
           <div className="col-12 col-md-6">
-            <div className="position-relative product-detail-img" style={{ minHeight: '220px', height: '100%', background: '#f9fafb' }}>
+            <div className="position-relative product-detail-img">
               <img
                 src={product.imageURL ? (product.imageURL.startsWith('http') ? product.imageURL : `${API_BASE}${product.imageURL}`) : `https://placehold.co/600x500/f0fdf4/16a34a?text=${encodeURIComponent(product.name)}`}
                 alt={product.name}
-                className="w-100 h-100"
-                style={{ objectFit: 'cover' }}
               />
               {/* Category badge */}
               <span className="position-absolute top-0 start-0 m-4 fw-semibold" style={{ padding: '6px 14px', borderRadius: '10px', fontSize: '12px', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(4px)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
