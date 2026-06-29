@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { productService } from '../services/api';
 import { API_BASE } from '../config';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../store/cartSlice';
 
@@ -96,7 +96,6 @@ const Home: React.FC = () => {
   const [addedId, setAddedId] = useState<string | null>(null);
   const debounceRef = useRef<any>(null);
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   useEffect(() => {
     productService.getCategories().then(res => setCategories(res.data)).catch(() => {});
