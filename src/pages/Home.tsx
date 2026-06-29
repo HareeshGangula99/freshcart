@@ -231,8 +231,6 @@ const Home: React.FC = () => {
                                 <img
                                   src={product.imageURL ? (product.imageURL.startsWith('http') ? product.imageURL : `${API_BASE}${product.imageURL}`) : `https://placehold.co/400x300/f0fdf4/16a34a?text=${encodeURIComponent(pMeta.emoji)}`}
                                   alt={product.name}
-                                  className="w-100 h-100"
-                                  style={{ objectFit: 'cover' }}
                                   loading="lazy"
                                 />
                                 {isOutOfStock && (
