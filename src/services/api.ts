@@ -48,10 +48,29 @@ export const adminService = {
   approveUser: (id: string) => api.patch(`/admin/approve/${id}`),
   createPartner: (data: any) => api.post('/admin/partners', data),
   getDeliveryPartners: () => api.get('/admin/delivery-partners'),
+  blockDeliveryPartner: (id: string, blocked: boolean) => api.patch(`/admin/partners/${id}/block`, { blocked }),
   getCategories: () => api.get('/admin/categories'),
   createCategory: (data: { name: string; icon?: string; color?: string }) => api.post('/admin/categories', data),
   deleteCategory: (id: string) => api.delete(`/admin/categories/${id}`),
   getActiveDeliveries: () => api.get('/orders/active-deliveries'),
+  getSettings: () => api.get('/settings'),
+  updateSettings: (data: any) => api.put('/admin/settings', data),
+  getAllUsers: () => api.get('/admin/users'),
+  blockUser: (id: string, blocked: boolean) => api.patch(`/admin/users/${id}/block`, { blocked }),
+  getUserOffers: () => api.get('/admin/user-offers'),
+  createUserOffer: (data: any) => api.post('/admin/user-offers', data),
+  deleteUserOffer: (id: string) => api.delete(`/admin/user-offers/${id}`),
+  toggleUserOffer: (id: string) => api.patch(`/admin/user-offers/${id}/toggle`),
+  getPremiumPlans: () => api.get('/admin/premium-plans'),
+  createPremiumPlan: (data: any) => api.post('/admin/premium-plans', data),
+  updatePremiumPlan: (id: string, data: any) => api.put(`/admin/premium-plans/${id}`, data),
+  deletePremiumPlan: (id: string) => api.delete(`/admin/premium-plans/${id}`),
+  getPremiumSubscribers: () => api.get('/admin/premium-subscribers'),
+};
+
+export const userService = {
+  getMyPremium: () => api.get('/user/premium'),
+  getMyOffers: () => api.get('/user/offers'),
 };
 
 export default api;

@@ -13,10 +13,11 @@ const ManagerDashboard: React.FC = () => {
   const [partnerId, setPartnerId] = useState('');
   const [dispatching, setDispatching] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'orders' | 'inventory'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'inventory' | 'partners' | 'users' | 'categories'>('orders');
   const [stockValues, setStockValues] = useState<Record<string, number>>({});
   const stockTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
-
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const fetchData = useCallback(async () => {
     try {
       const [oRes, pRes, partRes] = await Promise.all([orderService.getManagerOrders(), productService.getProducts({ page: '1', limit: '200' }), adminService.getDeliveryPartners()]);
@@ -25,6 +26,18 @@ const ManagerDashboard: React.FC = () => {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  useEffect(() => {
+    if (activeTab === 'partners') {
+      adminService.getDeliveryPartners().then(res => setPartners(res.data)).catch(() => {});
+    }
+    if (activeTab === 'users') {
+      adminService.getAllUsers().then(res => setAllUsers(res.data)).catch(() => {});
+    }
+    if (activeTab === 'categories') {
+      adminService.getCategories().then(res => setCategories(res.data.map((c: any) => c.name))).catch(() => {});
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     socket.on('order_confirmed', (data: { orderId: string; userName: string; amount: number }) => {
@@ -102,16 +115,21 @@ const ManagerDashboard: React.FC = () => {
         </button>
       </div>
 
-      <div className="d-flex gap-1 p-1 rounded-3 mb-3 mb-md-4 hide-scrollbar" style={{ background: 'white', border: '1px solid #e5e7eb', overflowX: 'auto' }}>
+      <div className="d-flex gap-1 p-1 rounded-3 mb-3 mb-md-4 scroll-x-isolate" style={{ background: 'white', border: '1px solid #e5e7eb' }}>
         {[
-          { id: 'orders' as const, label: 'Pending Orders', icon: 'bi-cart3', count: orders.length },
+          { id: 'orders' as const, label: 'Orders', icon: 'bi-cart3', count: orders.length },
           { id: 'inventory' as const, label: 'Inventory', icon: 'bi-box', count: products.length },
+          { id: 'partners' as const, label: 'Partners', icon: 'bi-truck', count: partners.length },
+          { id: 'users' as const, label: 'Users', icon: 'bi-people', count: allUsers.length },
+          { id: 'categories' as const, label: 'Categories', icon: 'bi-grid', count: categories.length },
         ].map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-            className={`btn d-flex align-items-center gap-2 fw-medium flex-grow-1 justify-content-center rounded-2 py-2 ${activeTab === tab.id ? 'text-white' : 'text-muted'}`}
-            style={activeTab === tab.id ? { background: '#059669' } : {}}>
+            className={`btn d-flex align-items-center gap-2 fw-medium justify-content-center rounded-2 py-2 flex-shrink-0 ${activeTab === tab.id ? 'text-white' : 'text-muted'}`}
+            style={{ whiteSpace: 'nowrap', ...(activeTab === tab.id ? { background: '#059669' } : {}) }}>
             <i className={`bi ${tab.icon}`}></i> {tab.label}
-            <span className="badge" style={{ fontSize: '10px', background: activeTab === tab.id ? 'rgba(255,255,255,0.2)' : '#f3f4f6', color: activeTab === tab.id ? 'white' : '#9ca3af' }}>{tab.count}</span>
+            {tab.count !== undefined && (
+              <span className={`badge ${activeTab === tab.id ? 'bg-white bg-opacity-25 text-white' : 'bg-light text-muted'}`} style={{ fontSize: '10px' }}>{tab.count}</span>
+            )}
           </button>
         ))}
       </div>
@@ -184,6 +202,78 @@ const ManagerDashboard: React.FC = () => {
         </div>
       )}
 
+      {/* Partners Tab */}
+      {activeTab === 'partners' && (
+        <div className="card border-0 shadow-sm rounded-4 p-4">
+          <h5 className="fw-bold mb-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Delivery Partners ({partners.length})</h5>
+          {partners.length === 0 ? <p className="text-muted">No partners yet.</p> : (
+            <div className="d-flex flex-column gap-2">
+              {partners.map((p: any) => (
+                <div key={p._id} className="d-flex align-items-center justify-content-between p-3 rounded-3 flex-wrap gap-2" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style={{ width: '40px', height: '40px', fontSize: '14px', background: p.availability === 'busy' ? '#f59e0b' : '#059669' }}>
+                      {p.name?.[0]?.toUpperCase()}
+                    </div>
+                    <div>
+                      <h6 className="fw-bold mb-0" style={{ fontSize: '14px' }}>{p.name}</h6>
+                      <small className="text-muted" style={{ fontSize: '11px' }}>{p.email} • {p.vehicleType} • ★ {p.rating}</small>
+                      <div className="d-flex align-items-center gap-2 mt-1">
+                        <span className="badge rounded-pill" style={{ fontSize: '10px', background: p.availability === 'busy' ? '#fef3c7' : '#dcfce7', color: p.availability === 'busy' ? '#d97706' : '#059669' }}>
+                          {p.availability === 'busy' ? '● Busy' : '● Free'}
+                        </span>
+                        {p.isBlocked && <span className="badge rounded-pill" style={{ fontSize: '10px', background: '#fef2f2', color: '#dc2626' }}>Blocked</span>}
+                      </div>
+                    </div>
+                  </div>
+                  <button onClick={async () => { await adminService.blockDeliveryPartner(p._id, !p.isBlocked); setPartners(partners.map((x: any) => x._id === p._id ? { ...x, isBlocked: !x.isBlocked } : x)); }}
+                    className="btn btn-sm fw-semibold rounded-2 px-3 py-1"
+                    style={{ fontSize: '12px', background: p.isBlocked ? '#fef2f2' : '#f0fdf4', color: p.isBlocked ? '#dc2626' : '#059669', border: `1px solid ${p.isBlocked ? '#fecaca' : '#dcfce7'}` }}>
+                    {p.isBlocked ? 'Unblock' : 'Block'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Users Tab */}
+      {activeTab === 'users' && (
+        <div className="card border-0 shadow-sm rounded-4 p-4">
+          <h5 className="fw-bold mb-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>All Users ({allUsers.length})</h5>
+          {allUsers.length === 0 ? <p className="text-muted">No users yet.</p> : (
+            <div className="d-flex flex-column gap-2">
+              {allUsers.map((u: any) => (
+                <div key={u._id} className="d-flex align-items-center justify-content-between p-3 rounded-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                  <div>
+                    <h6 className="fw-bold mb-0" style={{ fontSize: '14px' }}>{u.name}</h6>
+                    <small className="text-muted" style={{ fontSize: '11px' }}>{u.email} • {u.phone || 'No phone'} • Joined {new Date(u.createdAt).toLocaleDateString()}</small>
+                  </div>
+                  <button onClick={async () => { await adminService.blockUser(u._id, !u.isBlocked); setAllUsers(allUsers.map((x: any) => x._id === u._id ? { ...x, isBlocked: !x.isBlocked } : x)); }}
+                    className="btn btn-sm fw-semibold rounded-2 px-3 py-1"
+                    style={{ fontSize: '12px', background: u.isBlocked ? '#fef2f2' : '#f0fdf4', color: u.isBlocked ? '#dc2626' : '#059669', border: `1px solid ${u.isBlocked ? '#fecaca' : '#dcfce7'}` }}>
+                    {u.isBlocked ? 'Unblock' : 'Block'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Categories Tab */}
+      {activeTab === 'categories' && (
+        <div className="card border-0 shadow-sm rounded-4 p-4">
+          <h5 className="fw-bold mb-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Categories ({categories.length})</h5>
+          <div className="d-flex flex-wrap gap-2">
+            {categories.map(cat => (
+              <span key={cat} className="badge rounded-pill px-3 py-2" style={{ background: '#f0fdf4', color: '#059669', fontSize: '13px', fontWeight: 500 }}>{cat}</span>
+            ))}
+          </div>
+          {categories.length === 0 && <p className="text-muted">No categories yet.</p>}
+        </div>
+      )}
+
       {/* Dispatch Modal */}
       {selectedOrder && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-end align-items-md-center justify-content-center p-0 p-md-3" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1060 }}>
@@ -213,7 +303,11 @@ const ManagerDashboard: React.FC = () => {
               {partners.length === 0 ? <small className="text-danger">No partners available</small> : (
                 <select className="form-select fc-input" value={partnerId} onChange={e => setPartnerId(e.target.value)}>
                   <option value="">-- Select Partner --</option>
-                  {partners.map((p: any) => <option key={p._id} value={p._id}>{p.name} ({p.email})</option>)}
+                  {partners.map((p: any) => (
+                    <option key={p._id} value={p._id} disabled={p.isBlocked}>
+                      {p.name} {p.availability === 'free' ? '🟢 Free' : '🟡 Busy'} {p.isBlocked ? '🔴 Blocked' : ''}
+                    </option>
+                  ))}
                 </select>
               )}
             </div>

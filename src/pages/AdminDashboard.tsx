@@ -7,13 +7,13 @@ import DeliveryTrackingMap from '../components/DeliveryTrackingMap';
 const socket = getSocket();
 
 const UOM_OPTIONS = [
-  { value: 'kg', label: 'Kilogram (kg)' },
-  { value: 'g', label: 'Gram (g)' },
-  { value: 'qty', label: 'Quantity (qty)' },
-  { value: 'ltr', label: 'Litre (ltr)' },
-  { value: 'ml', label: 'Millilitre (ml)' },
-  { value: 'dozen', label: 'Dozen' },
-  { value: 'piece', label: 'Piece' },
+  { value: 'kg', label: 'Kilogram (kg)', short: 'kg' },
+  { value: 'g', label: 'Gram (g)', short: 'g' },
+  { value: 'qty', label: 'Quantity (qty)', short: 'qty' },
+  { value: 'ltr', label: 'Litre (ltr)', short: 'ltr' },
+  { value: 'ml', label: 'Millilitre (ml)', short: 'ml' },
+  { value: 'dozen', label: 'Dozen', short: 'dozen' },
+  { value: 'piece', label: 'Piece', short: 'pc' },
 ];
 
 const ROWS_PER_PAGE = 8;
@@ -24,11 +24,11 @@ const AdminDashboard: React.FC = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [categoryList, setCategoryList] = useState<any[]>([]);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [newProduct, setNewProduct] = useState({ name: '', price: 0, categories: [] as string[], uom: 'qty', description: '', stockQuantity: 10 });
+  const [newProduct, setNewProduct] = useState({ name: '', price: 0, categories: [] as string[], uom: 'qty', uomValue: 1, description: '', stockQuantity: 10 });
   const [editProduct, setEditProduct] = useState<any>(null);
   const [productImage, setProductImage] = useState<File | null>(null);
   const [newPartner, setNewPartner] = useState({ name: '', email: '', password: '', phone: '', vehicleType: 'Bike' });
-  const [activeTab, setActiveTab] = useState<'products' | 'approvals' | 'partners' | 'categories' | 'tracking'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'approvals' | 'partners' | 'categories' | 'tracking' | 'settings' | 'users' | 'offers' | 'premium'>('products');
   const [showProductForm, setShowProductForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -45,12 +45,38 @@ const AdminDashboard: React.FC = () => {
   const [deliveryLocations, setDeliveryLocations] = useState<Record<string, { lat: number; lng: number }>>({});
   const [customerLocations, setCustomerLocations] = useState<Record<string, { lat: number; lng: number }>>({});
   const [_trackingFilter] = useState<'all' | 'active'>('all');
+  const [storeSettings, setStoreSettings] = useState({ handlingFee: 5, gstRate: 5, freeDeliveryAbove: 200, deliveryFee: 30 });
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [allPartners, setAllPartners] = useState<any[]>([]);
+  const [userOffers, setUserOffers] = useState<any[]>([]);
+  const [premiumPlans, setPremiumPlans] = useState<any[]>([]);
+  const [premiumSubscribers, setPremiumSubscribers] = useState<any[]>([]);
+  const [newOffer, setNewOffer] = useState({ name: '', userIds: [] as string[], freeDeliveryAbove: 0, deliveryFee: 0, expiresAt: '' });
+  const [selectedOfferUsers, setSelectedOfferUsers] = useState<string[]>([]);
+  const [newPlan, setNewPlan] = useState({ name: '', type: 'monthly' as 'weekly' | 'monthly', price: 0, freeDeliveryAbove: 0, deliveryFee: 0, discountPercent: 0 });
 
   useEffect(() => { fetchData(); }, []);
 
   useEffect(() => {
     if (activeTab === 'tracking') {
       fetchActiveDeliveries();
+    }
+    if (activeTab === 'settings') {
+      adminService.getSettings().then(res => setStoreSettings(res.data)).catch(() => {});
+    }
+    if (activeTab === 'users') {
+      adminService.getAllUsers().then(res => setAllUsers(res.data)).catch(() => {});
+    }
+    if (activeTab === 'partners') {
+      adminService.getDeliveryPartners().then(res => setAllPartners(res.data)).catch(() => {});
+    }
+    if (activeTab === 'offers') {
+      adminService.getUserOffers().then(res => setUserOffers(res.data)).catch(() => {});
+      adminService.getAllUsers().then(res => setAllUsers(res.data)).catch(() => {});
+    }
+    if (activeTab === 'premium') {
+      adminService.getPremiumPlans().then(res => setPremiumPlans(res.data)).catch(() => {});
+      adminService.getPremiumSubscribers().then(res => setPremiumSubscribers(res.data)).catch(() => {});
     }
   }, [activeTab]);
 
@@ -183,13 +209,14 @@ const AdminDashboard: React.FC = () => {
         categories: newProduct.categories,
         category: newProduct.categories[0] || '',
         uom: newProduct.uom,
+        uomValue: newProduct.uomValue,
         description: newProduct.description,
         stockQuantity: newProduct.stockQuantity,
         imageURL,
       });
 
       fetchData();
-      setNewProduct({ name: '', price: 0, categories: [], uom: 'qty', description: '', stockQuantity: 10 });
+      setNewProduct({ name: '', price: 0, categories: [], uom: 'qty', uomValue: 1, description: '', stockQuantity: 10 });
       setProductImage(null);
       setUploadProgress(0);
       setShowProductForm(false);
@@ -217,6 +244,7 @@ const AdminDashboard: React.FC = () => {
         categories: editProduct.categories,
         category: editProduct.categories[0] || '',
         uom: editProduct.uom,
+        uomValue: editProduct.uomValue,
         description: editProduct.description,
         stockQuantity: editProduct.stockQuantity,
         imageURL,
@@ -326,8 +354,12 @@ const AdminDashboard: React.FC = () => {
     { id: 'products' as const, label: 'Products', icon: 'bi-box', count: products.length },
     { id: 'categories' as const, label: 'Categories', icon: 'bi-grid', count: categories.length },
     { id: 'approvals' as const, label: 'Approvals', icon: 'bi-people', count: requests.length },
-    { id: 'partners' as const, label: 'Partners', icon: 'bi-truck' },
+    { id: 'partners' as const, label: 'Partners', icon: 'bi-truck', count: allPartners.length },
+    { id: 'users' as const, label: 'Users', icon: 'bi-person-lines-fill', count: allUsers.length },
+    { id: 'offers' as const, label: 'User Offers', icon: 'bi-tag', count: userOffers.length },
+    { id: 'premium' as const, label: 'Premium', icon: 'bi-gem', count: premiumPlans.length },
     { id: 'tracking' as const, label: 'Live Tracking', icon: 'bi-geo-alt' },
+    { id: 'settings' as const, label: 'Settings', icon: 'bi-gear' },
   ];
 
   const renderCategoryCheckboxes = (selectedCategories: string[], isEdit = false) => (
@@ -373,9 +405,23 @@ const AdminDashboard: React.FC = () => {
 
           <div className="mb-2">
             <label className="form-label fw-medium text-muted mb-1" style={{ fontSize: '12px' }}>Unit of Measurement</label>
-            <select className="form-select fc-input" value={data.uom || 'qty'} onChange={e => setData({ ...data, uom: e.target.value })}>
-              {UOM_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-            </select>
+            <div className="d-flex gap-2">
+              <input 
+                type="number" 
+                placeholder="Unit qty" 
+                className="form-control fc-input" 
+                style={{ width: '80px' }}
+                min="1"
+                value={data.uomValue || 1} 
+                onChange={e => setData({ ...data, uomValue: Number(e.target.value) || 1 })} 
+              />
+              <select className="form-select fc-input flex-grow-1" value={data.uom || 'qty'} onChange={e => setData({ ...data, uom: e.target.value })}>
+                {UOM_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+              </select>
+            </div>
+            <small className="text-muted" style={{ fontSize: '10px' }}>
+              Price: ₹{data.price || 0} per {data.uomValue || 1} {UOM_OPTIONS.find(o => o.value === (data.uom || 'qty'))?.short || 'qty'}
+            </small>
           </div>
 
           <div className="mb-2">
@@ -439,7 +485,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="d-flex gap-1 p-1 rounded-3 mb-3 mb-md-4 hide-scrollbar" style={{ background: 'white', border: '1px solid #e5e7eb', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <div className="d-flex gap-1 p-1 rounded-3 mb-3 mb-md-4 scroll-x-isolate" style={{ background: 'white', border: '1px solid #e5e7eb' }}>
         {tabs.map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
             className={`btn d-flex align-items-center gap-2 fw-medium justify-content-center rounded-2 py-2 flex-shrink-0 ${activeTab === tab.id ? 'text-white' : 'text-muted'}`}
@@ -690,23 +736,228 @@ const AdminDashboard: React.FC = () => {
 
       {/* Partners Tab */}
       {activeTab === 'partners' && (
-        <div className="card border-0 shadow-sm rounded-4 p-4" style={{ maxWidth: '440px' }}>
-          <h5 className="fw-bold mb-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            <i className="bi bi-truck text-success me-2"></i> Create Delivery Partner
-          </h5>
-          <form onSubmit={handleCreatePartner}>
-            <input placeholder="Full Name" className="form-control fc-input mb-2" value={newPartner.name} onChange={e => setNewPartner({ ...newPartner, name: e.target.value })} required />
-            <input type="email" placeholder="Email" className="form-control fc-input mb-2" value={newPartner.email} onChange={e => setNewPartner({ ...newPartner, email: e.target.value })} required />
-            <input type="password" placeholder="Password" className="form-control fc-input mb-2" value={newPartner.password} onChange={e => setNewPartner({ ...newPartner, password: e.target.value })} required />
-            <input type="tel" placeholder="Phone Number" className="form-control fc-input mb-2" value={newPartner.phone} onChange={e => setNewPartner({ ...newPartner, phone: e.target.value })} required />
-            <select className="form-select fc-input mb-3" value={newPartner.vehicleType} onChange={e => setNewPartner({ ...newPartner, vehicleType: e.target.value })}>
-              <option value="Bike">🚲 Bike</option>
-              <option value="Scooter">🛵 Scooter</option>
-              <option value="Van">🚐 Van</option>
-              <option value="Truck">🚛 Truck</option>
-            </select>
-            <button type="submit" className="btn w-100 fw-bold text-white rounded-3 py-2 fc-primary">Create Partner</button>
-          </form>
+        <div>
+          <div className="card border-0 shadow-sm rounded-4 p-4 mb-3" style={{ maxWidth: '440px' }}>
+            <h5 className="fw-bold mb-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <i className="bi bi-truck text-success me-2"></i> Create Delivery Partner
+            </h5>
+            <form onSubmit={handleCreatePartner}>
+              <input placeholder="Full Name" className="form-control fc-input mb-2" value={newPartner.name} onChange={e => setNewPartner({ ...newPartner, name: e.target.value })} required />
+              <input type="email" placeholder="Email" className="form-control fc-input mb-2" value={newPartner.email} onChange={e => setNewPartner({ ...newPartner, email: e.target.value })} required />
+              <input type="password" placeholder="Password" className="form-control fc-input mb-2" value={newPartner.password} onChange={e => setNewPartner({ ...newPartner, password: e.target.value })} required />
+              <input type="tel" placeholder="Phone Number" className="form-control fc-input mb-2" value={newPartner.phone} onChange={e => setNewPartner({ ...newPartner, phone: e.target.value })} required />
+              <select className="form-select fc-input mb-3" value={newPartner.vehicleType} onChange={e => setNewPartner({ ...newPartner, vehicleType: e.target.value })}>
+                <option value="Bike">🚲 Bike</option>
+                <option value="Scooter">🛵 Scooter</option>
+                <option value="Van">🚐 Van</option>
+                <option value="Truck">🚛 Truck</option>
+              </select>
+              <button type="submit" className="btn w-100 fw-bold text-white rounded-3 py-2 fc-primary">Create Partner</button>
+            </form>
+          </div>
+          <div className="card border-0 shadow-sm rounded-4 p-4">
+            <h5 className="fw-bold mb-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Delivery Partners ({allPartners.length})</h5>
+            {allPartners.length === 0 ? <p className="text-muted">No partners yet.</p> : (
+              <div className="d-flex flex-column gap-2">
+                {allPartners.map((p: any) => (
+                  <div key={p._id} className="d-flex align-items-center justify-content-between p-3 rounded-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                    <div>
+                      <h6 className="fw-bold mb-0" style={{ fontSize: '14px' }}>{p.name}</h6>
+                      <small className="text-muted" style={{ fontSize: '11px' }}>{p.email} • {p.vehicleType} • ★ {p.rating}</small>
+                    </div>
+                    <button onClick={async () => { await adminService.blockDeliveryPartner(p._id, !p.isBlocked); setAllPartners(allPartners.map((x: any) => x._id === p._id ? { ...x, isBlocked: !x.isBlocked } : x)); }}
+                      className="btn btn-sm fw-semibold rounded-2 px-3 py-1"
+                      style={{ fontSize: '12px', background: p.isBlocked ? '#fef2f2' : '#f0fdf4', color: p.isBlocked ? '#dc2626' : '#059669', border: `1px solid ${p.isBlocked ? '#fecaca' : '#dcfce7'}` }}>
+                      {p.isBlocked ? 'Unblock' : 'Block'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Users Tab */}
+      {activeTab === 'users' && (
+        <div className="card border-0 shadow-sm rounded-4 p-4">
+          <h5 className="fw-bold mb-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>All Users ({allUsers.length})</h5>
+          {allUsers.length === 0 ? <p className="text-muted">No users yet.</p> : (
+            <div className="d-flex flex-column gap-2">
+              {allUsers.map((u: any) => (
+                <div key={u._id} className="d-flex align-items-center justify-content-between p-3 rounded-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                  <div>
+                    <h6 className="fw-bold mb-0" style={{ fontSize: '14px' }}>{u.name}</h6>
+                    <small className="text-muted" style={{ fontSize: '11px' }}>{u.email} • {u.phone || 'No phone'} • Joined {new Date(u.createdAt).toLocaleDateString()}</small>
+                  </div>
+                  <button onClick={async () => { await adminService.blockUser(u._id, !u.isBlocked); setAllUsers(allUsers.map((x: any) => x._id === u._id ? { ...x, isBlocked: !x.isBlocked } : x)); }}
+                    className="btn btn-sm fw-semibold rounded-2 px-3 py-1"
+                    style={{ fontSize: '12px', background: u.isBlocked ? '#fef2f2' : '#f0fdf4', color: u.isBlocked ? '#dc2626' : '#059669', border: `1px solid ${u.isBlocked ? '#fecaca' : '#dcfce7'}` }}>
+                    {u.isBlocked ? 'Unblock' : 'Block'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* User Offers Tab */}
+      {activeTab === 'offers' && (
+        <div>
+          <div className="card border-0 shadow-sm rounded-4 p-4 mb-3" style={{ maxWidth: '540px' }}>
+            <h5 className="fw-bold mb-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <i className="bi bi-tag text-success me-2"></i> Create User Offer
+            </h5>
+            <input placeholder="Offer Name (e.g. VIP Group)" className="form-control fc-input mb-2" value={newOffer.name} onChange={e => setNewOffer({ ...newOffer, name: e.target.value })} required />
+            <div className="row g-2 mb-2">
+              <div className="col-6">
+                <label className="form-label fw-medium" style={{ fontSize: '12px' }}>Free Delivery Above (₹)</label>
+                <input type="number" className="form-control fc-input" value={newOffer.freeDeliveryAbove} onChange={e => setNewOffer({ ...newOffer, freeDeliveryAbove: Number(e.target.value) })} min={0} />
+              </div>
+              <div className="col-6">
+                <label className="form-label fw-medium" style={{ fontSize: '12px' }}>Delivery Fee (₹)</label>
+                <input type="number" className="form-control fc-input" value={newOffer.deliveryFee} onChange={e => setNewOffer({ ...newOffer, deliveryFee: Number(e.target.value) })} min={0} />
+              </div>
+            </div>
+            <div className="mb-2">
+              <label className="form-label fw-medium" style={{ fontSize: '12px' }}>Expires On (optional)</label>
+              <input type="date" className="form-control fc-input" value={newOffer.expiresAt} onChange={e => setNewOffer({ ...newOffer, expiresAt: e.target.value })} />
+            </div>
+            <div className="mb-3">
+              <label className="form-label fw-medium" style={{ fontSize: '12px' }}>Select Users</label>
+              <div className="d-flex flex-wrap gap-1 p-2 rounded-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb', maxHeight: '120px', overflowY: 'auto' }}>
+                {allUsers.map((u: any) => (
+                  <label key={u._id} className="d-flex align-items-center gap-1 px-2 py-1 rounded-2" style={{ fontSize: '11px', cursor: 'pointer', background: selectedOfferUsers.includes(u._id) ? '#ecfdf5' : '#fff', border: `1px solid ${selectedOfferUsers.includes(u._id) ? '#a7f3d0' : '#e5e7eb'}` }}>
+                    <input type="checkbox" className="form-check-input m-0" style={{ width: '12px', height: '12px' }}
+                      checked={selectedOfferUsers.includes(u._id)}
+                      onChange={() => setSelectedOfferUsers(prev => prev.includes(u._id) ? prev.filter(id => id !== u._id) : [...prev, u._id])} />
+                    {u.name}
+                  </label>
+                ))}
+              </div>
+              <small className="text-muted" style={{ fontSize: '11px' }}>{selectedOfferUsers.length} users selected</small>
+            </div>
+            <button onClick={async () => {
+              if (!newOffer.name || selectedOfferUsers.length === 0) return alert('Enter offer name and select users');
+              await adminService.createUserOffer({ ...newOffer, userIds: selectedOfferUsers });
+              setNewOffer({ name: '', userIds: [], freeDeliveryAbove: 0, deliveryFee: 0, expiresAt: '' });
+              setSelectedOfferUsers([]);
+              const res = await adminService.getUserOffers();
+              setUserOffers(res.data);
+            }} className="btn w-100 fw-bold text-white rounded-3 py-2 fc-primary">Create Offer</button>
+          </div>
+          <div className="card border-0 shadow-sm rounded-4 p-4">
+            <h5 className="fw-bold mb-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Active Offers ({userOffers.length})</h5>
+            {userOffers.length === 0 ? <p className="text-muted">No offers yet.</p> : (
+              <div className="d-flex flex-column gap-2">
+                {userOffers.map((o: any) => (
+                  <div key={o._id} className="d-flex align-items-center justify-content-between p-3 rounded-3" style={{ background: o.isActive ? '#f9fafb' : '#fef2f2', border: `1px solid ${o.isActive ? '#e5e7eb' : '#fecaca'}` }}>
+                    <div>
+                      <h6 className="fw-bold mb-0" style={{ fontSize: '14px' }}>{o.name}</h6>
+                      <small className="text-muted" style={{ fontSize: '11px' }}>
+                        {o.userIds?.length || 0} users • {o.freeDeliveryAbove ? `Free above ₹${o.freeDeliveryAbove}` : ''} {o.deliveryFee ? `• ₹${o.deliveryFee} delivery` : ''}
+                        {o.expiresAt ? ` • Expires ${new Date(o.expiresAt).toLocaleDateString()}` : ''}
+                      </small>
+                    </div>
+                    <div className="d-flex gap-1">
+                      <button onClick={async () => { await adminService.toggleUserOffer(o._id); const res = await adminService.getUserOffers(); setUserOffers(res.data); }}
+                        className="btn btn-sm fw-semibold rounded-2 px-2 py-1" style={{ fontSize: '11px', background: o.isActive ? '#fef2f2' : '#f0fdf4', color: o.isActive ? '#dc2626' : '#059669', border: `1px solid ${o.isActive ? '#fecaca' : '#dcfce7'}` }}>
+                        {o.isActive ? 'Disable' : 'Enable'}
+                      </button>
+                      <button onClick={async () => { if (confirm('Delete this offer?')) { await adminService.deleteUserOffer(o._id); const res = await adminService.getUserOffers(); setUserOffers(res.data); } }}
+                        className="btn btn-sm fw-semibold rounded-2 px-2 py-1" style={{ fontSize: '11px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>
+                        <i className="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Premium Tab */}
+      {activeTab === 'premium' && (
+        <div>
+          <div className="card border-0 shadow-sm rounded-4 p-4 mb-3" style={{ maxWidth: '540px' }}>
+            <h5 className="fw-bold mb-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <i className="bi bi-gem text-success me-2"></i> Create Premium Plan
+            </h5>
+            <input placeholder="Plan Name (e.g. Weekly Gold)" className="form-control fc-input mb-2" value={newPlan.name} onChange={e => setNewPlan({ ...newPlan, name: e.target.value })} required />
+            <div className="row g-2 mb-2">
+              <div className="col-6">
+                <label className="form-label fw-medium" style={{ fontSize: '12px' }}>Plan Type</label>
+                <select className="form-select fc-input" value={newPlan.type} onChange={e => setNewPlan({ ...newPlan, type: e.target.value as 'weekly' | 'monthly' })}>
+                  <option value="weekly">Weekly (7 days)</option>
+                  <option value="monthly">Monthly (30 days)</option>
+                </select>
+              </div>
+              <div className="col-6">
+                <label className="form-label fw-medium" style={{ fontSize: '12px' }}>Price (₹)</label>
+                <input type="number" className="form-control fc-input" value={newPlan.price} onChange={e => setNewPlan({ ...newPlan, price: Number(e.target.value) })} min={0} />
+              </div>
+            </div>
+            <div className="row g-2 mb-2">
+              <div className="col-4">
+                <label className="form-label fw-medium" style={{ fontSize: '12px' }}>Free Delivery Above (₹)</label>
+                <input type="number" className="form-control fc-input" value={newPlan.freeDeliveryAbove} onChange={e => setNewPlan({ ...newPlan, freeDeliveryAbove: Number(e.target.value) })} min={0} />
+              </div>
+              <div className="col-4">
+                <label className="form-label fw-medium" style={{ fontSize: '12px' }}>Delivery Fee (₹)</label>
+                <input type="number" className="form-control fc-input" value={newPlan.deliveryFee} onChange={e => setNewPlan({ ...newPlan, deliveryFee: Number(e.target.value) })} min={0} />
+              </div>
+              <div className="col-4">
+                <label className="form-label fw-medium" style={{ fontSize: '12px' }}>Discount (%)</label>
+                <input type="number" className="form-control fc-input" value={newPlan.discountPercent} onChange={e => setNewPlan({ ...newPlan, discountPercent: Number(e.target.value) })} min={0} max={50} />
+              </div>
+            </div>
+            <button onClick={async () => {
+              if (!newPlan.name || !newPlan.price) return alert('Enter plan name and price');
+              await adminService.createPremiumPlan(newPlan);
+              setNewPlan({ name: '', type: 'monthly', price: 0, freeDeliveryAbove: 0, deliveryFee: 0, discountPercent: 0 });
+              const res = await adminService.getPremiumPlans();
+              setPremiumPlans(res.data);
+            }} className="btn w-100 fw-bold text-white rounded-3 py-2 fc-primary">Create Plan</button>
+          </div>
+          <div className="card border-0 shadow-sm rounded-4 p-4 mb-3">
+            <h5 className="fw-bold mb-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Premium Plans ({premiumPlans.length})</h5>
+            {premiumPlans.length === 0 ? <p className="text-muted">No plans yet.</p> : (
+              <div className="d-flex flex-column gap-2">
+                {premiumPlans.map((plan: any) => (
+                  <div key={plan._id} className="d-flex align-items-center justify-content-between p-3 rounded-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+                    <div>
+                      <h6 className="fw-bold mb-0" style={{ fontSize: '14px' }}>{plan.name} <span className="badge bg-success bg-opacity-10 text-success" style={{ fontSize: '10px' }}>{plan.type}</span></h6>
+                      <small className="text-muted" style={{ fontSize: '11px' }}>₹{plan.price} • Free above ₹{plan.freeDeliveryAbove} • ₹{plan.deliveryFee} delivery • {plan.discountPercent}% off</small>
+                    </div>
+                    <div className="d-flex gap-1">
+                      <button onClick={async () => { await adminService.deletePremiumPlan(plan._id); const res = await adminService.getPremiumPlans(); setPremiumPlans(res.data); }}
+                        className="btn btn-sm fw-semibold rounded-2 px-2 py-1" style={{ fontSize: '11px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>
+                        <i className="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="card border-0 shadow-sm rounded-4 p-4">
+            <h5 className="fw-bold mb-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Active Subscribers ({premiumSubscribers.length})</h5>
+            {premiumSubscribers.length === 0 ? <p className="text-muted">No active subscribers.</p> : (
+              <div className="d-flex flex-column gap-2">
+                {premiumSubscribers.map((s: any) => (
+                  <div key={s._id} className="d-flex align-items-center justify-content-between p-3 rounded-3" style={{ background: '#f0fdf4', border: '1px solid #dcfce7' }}>
+                    <div>
+                      <h6 className="fw-bold mb-0" style={{ fontSize: '14px' }}>{s.userId?.name}</h6>
+                      <small className="text-muted" style={{ fontSize: '11px' }}>{s.planId?.name} • Expires {new Date(s.endDate).toLocaleDateString()}</small>
+                    </div>
+                    <span className="badge" style={{ background: '#dcfce7', color: '#059669', fontSize: '11px' }}>Active</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -737,12 +988,15 @@ const AdminDashboard: React.FC = () => {
                   <div
                     key={order._id}
                     onClick={() => setSelectedDelivery(order)}
+                    onDoubleClick={(e) => e.preventDefault()}
                     className={`card border-0 shadow-sm rounded-4 p-3 ${selectedDelivery?._id === order._id ? 'border-2' : ''}`}
-                    style={{ cursor: 'pointer', borderColor: selectedDelivery?._id === order._id ? '#7c3aed' : undefined }}
+                    style={{ cursor: 'pointer', borderColor: selectedDelivery?._id === order._id ? '#7c3aed' : undefined, userSelect: 'none' }}
                   >
                     <div className="d-flex justify-content-between align-items-center mb-2">
                       <p className="fw-bold mb-0" style={{ fontSize: '13px' }}>#{order._id.slice(-6).toUpperCase()}</p>
-                      <span className="badge bg-purple bg-opacity-10 text-purple" style={{ fontSize: '10px', color: '#7c3aed', background: '#f3e8ff' }}>{order.orderStatus}</span>
+                      <span className="badge rounded-pill" style={{ fontSize: '10px', color: order.orderStatus === 'OUT_FOR_DELIVERY' ? '#7c3aed' : order.orderStatus === 'DISPATCHED' ? '#2563eb' : '#059669', background: order.orderStatus === 'OUT_FOR_DELIVERY' ? '#f3e8ff' : order.orderStatus === 'DISPATCHED' ? '#dbeafe' : '#f0fdf4' }}>
+                        {order.orderStatus === 'OUT_FOR_DELIVERY' ? 'Out for Delivery' : order.orderStatus === 'DISPATCHED' ? 'Dispatched' : order.orderStatus === 'CONFIRMED' ? 'Confirmed' : order.orderStatus}
+                      </span>
                     </div>
                     <p className="text-muted mb-1" style={{ fontSize: '12px' }}>
                       <i className="bi bi-person me-1"></i>{order.userId?.name}
@@ -785,17 +1039,23 @@ const AdminDashboard: React.FC = () => {
                 {selectedDelivery && (
                   <div className="card border-0 shadow-sm rounded-4 p-3 mt-3 mt-lg-0">
                     <div className="row g-3">
-                      <div className="col-4 col-md-4">
+                      <div className="col-3 col-md-3">
                         <small className="text-muted d-block mb-1" style={{ fontSize: '11px' }}>Order</small>
                         <p className="fw-bold mb-0" style={{ fontSize: '13px' }}>#{selectedDelivery._id.slice(-6).toUpperCase()}</p>
                       </div>
-                      <div className="col-4 col-md-4">
+                      <div className="col-3 col-md-3">
                         <small className="text-muted d-block mb-1" style={{ fontSize: '11px' }}>Customer</small>
                         <p className="fw-medium mb-0 text-truncate" style={{ fontSize: '13px' }}>{selectedDelivery.userId?.name}</p>
                       </div>
-                      <div className="col-4 col-md-4">
+                      <div className="col-3 col-md-3">
                         <small className="text-muted d-block mb-1" style={{ fontSize: '11px' }}>Partner</small>
                         <p className="fw-medium mb-0 text-truncate" style={{ fontSize: '13px' }}>{selectedDelivery.deliveryPartnerId?.name || 'N/A'}</p>
+                      </div>
+                      <div className="col-3 col-md-3">
+                        <small className="text-muted d-block mb-1" style={{ fontSize: '11px' }}>Status</small>
+                        <span className="badge rounded-pill" style={{ fontSize: '11px', color: selectedDelivery.orderStatus === 'OUT_FOR_DELIVERY' ? '#7c3aed' : '#059669', background: selectedDelivery.orderStatus === 'OUT_FOR_DELIVERY' ? '#f3e8ff' : '#f0fdf4' }}>
+                          {selectedDelivery.orderStatus === 'OUT_FOR_DELIVERY' ? 'Out for Delivery' : selectedDelivery.orderStatus === 'DISPATCHED' ? 'Dispatched' : selectedDelivery.orderStatus}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -803,6 +1063,38 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Settings Tab */}
+      {activeTab === 'settings' && (
+        <div className="card border-0 shadow-soft rounded-4 p-4">
+          <h5 className="fw-bold mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Store Settings</h5>
+          <div className="row g-4">
+            <div className="col-md-3">
+              <label className="form-label fw-semibold" style={{ fontSize: '13px' }}>Handling Fee (₹)</label>
+              <input type="number" className="form-control fc-input" value={storeSettings.handlingFee} onChange={e => setStoreSettings({ ...storeSettings, handlingFee: Number(e.target.value) })} min={0} />
+              <small className="text-muted" style={{ fontSize: '11px' }}>Added to every order at checkout</small>
+            </div>
+            <div className="col-md-3">
+              <label className="form-label fw-semibold" style={{ fontSize: '13px' }}>GST Rate (%)</label>
+              <input type="number" className="form-control fc-input" value={storeSettings.gstRate} onChange={e => setStoreSettings({ ...storeSettings, gstRate: Number(e.target.value) })} min={0} max={28} />
+              <small className="text-muted" style={{ fontSize: '11px' }}>Applied on all products</small>
+            </div>
+            <div className="col-md-3">
+              <label className="form-label fw-semibold" style={{ fontSize: '13px' }}>Delivery Fee (₹)</label>
+              <input type="number" className="form-control fc-input" value={storeSettings.deliveryFee} onChange={e => setStoreSettings({ ...storeSettings, deliveryFee: Number(e.target.value) })} min={0} />
+              <small className="text-muted" style={{ fontSize: '11px' }}>Charged when below free delivery limit</small>
+            </div>
+            <div className="col-md-3">
+              <label className="form-label fw-semibold" style={{ fontSize: '13px' }}>Free Delivery Above (₹)</label>
+              <input type="number" className="form-control fc-input" value={storeSettings.freeDeliveryAbove} onChange={e => setStoreSettings({ ...storeSettings, freeDeliveryAbove: Number(e.target.value) })} min={0} />
+              <small className="text-muted" style={{ fontSize: '11px' }}>Orders above this get free delivery</small>
+            </div>
+          </div>
+          <button onClick={() => { adminService.updateSettings(storeSettings).then(() => alert('Settings saved!')).catch(() => alert('Failed to save')); }} className="btn fw-bold text-white rounded-3 px-4 py-2 mt-4 fc-primary" style={{ fontSize: '14px' }}>
+            <i className="bi bi-check-lg me-1"></i> Save Settings
+          </button>
         </div>
       )}
     </div>

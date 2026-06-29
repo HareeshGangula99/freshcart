@@ -6,7 +6,11 @@ import { addToCart } from '../store/cartSlice';
 import { API_BASE } from '../config';
 import type { RootState } from '../store/store';
 
-interface Product { _id: string; name: string; description: string; price: number; category: string; imageURL: string; stockQuantity: number; }
+interface Product { _id: string; name: string; description: string; price: number; category: string; uom: string; uomValue: number; imageURL: string; stockQuantity: number; }
+
+const UOM_LABELS: Record<string, string> = {
+  kg: 'kg', g: 'g', qty: 'qty', ltr: 'ltr', ml: 'ml', dozen: 'dozen', piece: 'pc',
+};
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,8 +35,9 @@ const ProductDetail: React.FC = () => {
 
   const handleAddToCart = () => {
     if (!product) return;
+    const imageURL = product.imageURL ? (product.imageURL.startsWith('http') ? product.imageURL : `${API_BASE}${product.imageURL}`) : `https://placehold.co/400x300/f0fdf4/16a34a?text=Fresh`;
     for (let i = 0; i < quantity; i++) {
-      dispatch(addToCart({ id: product._id, name: product.name, price: product.price, quantity: 1, imageURL: product.imageURL ? (product.imageURL.startsWith('http') ? product.imageURL : `${API_BASE}${product.imageURL}`) : `https://placehold.co/400x300/f0fdf4/16a34a?text=Fresh` }));
+      dispatch(addToCart({ id: product._id, name: product.name, price: product.price, quantity: 1, imageURL, stockQuantity: product.stockQuantity }));
     }
     setAdded(true);
   };
@@ -118,14 +123,14 @@ const ProductDetail: React.FC = () => {
               <span className="fw-bold" style={{ fontSize: '28px', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#059669' }}>
                 ₹{product.price}
               </span>
-              <span className="text-muted" style={{ fontSize: '14px' }}>/unit</span>
+              <span className="text-muted" style={{ fontSize: '14px' }}>/ {product.uomValue || 1} {UOM_LABELS[product.uom] || 'unit'}</span>
             </div>
 
             {/* Stock Info */}
             {product.stockQuantity > 0 && (
               <div className="d-flex align-items-center gap-2 mb-4 p-2 rounded-3" style={{ background: '#f0fdf4', border: '1px solid #dcfce7' }}>
                 <span className="rounded-circle d-inline-block" style={{ width: '8px', height: '8px', background: '#22c55e' }}></span>
-                <small className="fw-medium" style={{ fontSize: '13px', color: '#059669' }}>{product.stockQuantity} units available</small>
+                <small className="fw-medium" style={{ fontSize: '13px', color: '#059669' }}>{product.stockQuantity} {UOM_LABELS[product.uom] || 'units'} available</small>
               </div>
             )}
 
@@ -133,7 +138,7 @@ const ProductDetail: React.FC = () => {
               <>
                 {/* Quantity */}
                 <div className="mb-4">
-                  <label className="form-label fw-semibold mb-2" style={{ fontSize: '14px' }}>Quantity</label>
+                  <label className="form-label fw-semibold mb-2" style={{ fontSize: '14px' }}>Quantity ({UOM_LABELS[product.uom] || 'units'})</label>
                   <div className="d-flex align-items-center gap-3">
                     <div className="qty-control">
                       <button onClick={() => setQuantity(q => Math.max(1, q - 1))}>
@@ -146,6 +151,7 @@ const ProductDetail: React.FC = () => {
                     </div>
                     <span className="text-muted" style={{ fontSize: '13px' }}>= ₹{(product.price * quantity).toFixed(2)}</span>
                   </div>
+                  <small className="text-muted" style={{ fontSize: '11px' }}>Total: {quantity} × ₹{product.price} = ₹{(product.price * quantity).toFixed(2)}</small>
                 </div>
 
                 {/* Add to Cart / Go to Cart */}

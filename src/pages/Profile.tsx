@@ -8,13 +8,13 @@ import OrderHelpChat from '../components/OrderHelpChat';
 
 const socket = getSocket();
 
-const statusStyle: Record<string, { background: string; color: string; border: string }> = {
-  PLACED: { background: '#fffbeb', color: '#d97706', border: '1px solid #fde68a' },
-  CONFIRMED: { background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe' },
-  DISPATCHED: { background: '#f3e8ff', color: '#7c3aed', border: '1px solid #ddd6fe' },
-  OUT_FOR_DELIVERY: { background: '#f3e8ff', color: '#7c3aed', border: '1px solid #ddd6fe' },
-  DELIVERED: { background: '#dcfce7', color: '#16a34a', border: '1px solid #bbf7d0' },
-  CANCELLED: { background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' },
+const statusStyle: Record<string, { background: string; color: string; border: string; icon: string }> = {
+  PLACED: { background: '#fffbeb', color: '#d97706', border: '1px solid #fde68a', icon: 'bi-clock' },
+  CONFIRMED: { background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', icon: 'bi-check-circle' },
+  DISPATCHED: { background: '#f3e8ff', color: '#7c3aed', border: '1px solid #ddd6fe', icon: 'bi-truck' },
+  OUT_FOR_DELIVERY: { background: '#fef3c7', color: '#d97706', border: '1px solid #fde68a', icon: 'bi-lightning' },
+  DELIVERED: { background: '#dcfce7', color: '#16a34a', border: '1px solid #bbf7d0', icon: 'bi-check-circle-fill' },
+  CANCELLED: { background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', icon: 'bi-x-circle' },
 };
 
 const Profile: React.FC = () => {
@@ -53,7 +53,6 @@ const Profile: React.FC = () => {
           res = await orderService.getUserOrders();
         }
         setOrders(res.data);
-        // Join order rooms for active orders to receive real-time updates
         res.data.forEach((order: any) => {
           if (order.orderStatus !== 'DELIVERED' && order.orderStatus !== 'CANCELLED') {
             socket.emit('join_order_room', order._id);
@@ -116,7 +115,6 @@ const Profile: React.FC = () => {
     };
   }, []);
 
-  // Cleanup tracking listener on unmount
   useEffect(() => {
     return () => {
       if (trackingListenerRef.current) {
@@ -158,27 +156,23 @@ const Profile: React.FC = () => {
     setCustomerLocation(null);
     setTrackingInfo(null);
 
-    // Remove old tracking listener if any
     if (trackingListenerRef.current) {
       socket.off('delivery_location_update', trackingListenerRef.current);
       trackingListenerRef.current = null;
     }
 
-    // ALWAYS use delivery address (Marthahalli) as customer destination - NOT device GPS
     if (order.deliveryAddress?.lat && order.deliveryAddress?.lng) {
       setCustomerLocation({ lat: order.deliveryAddress.lat, lng: order.deliveryAddress.lng });
     } else if (order.customerLocation?.lat && order.customerLocation?.lng) {
       setCustomerLocation({ lat: order.customerLocation.lat, lng: order.customerLocation.lng });
     }
 
-    // Fetch latest tracking data from DB
     try {
       const res = await orderService.getOrderTracking(order._id);
       const data = res.data;
       if (data.deliveryPartnerLocation?.lat && data.deliveryPartnerLocation?.lng) {
         setDeliveryLocation({ lat: data.deliveryPartnerLocation.lat, lng: data.deliveryPartnerLocation.lng });
       }
-      // Prefer delivery address coordinates (the actual destination)
       if (data.deliveryAddress?.lat && data.deliveryAddress?.lng) {
         setCustomerLocation({ lat: data.deliveryAddress.lat, lng: data.deliveryAddress.lng });
       } else if (data.customerLocation?.lat && data.customerLocation?.lng) {
@@ -190,7 +184,6 @@ const Profile: React.FC = () => {
       }
     }
 
-    // Named listener for delivery location updates
     const handleDeliveryLocation = (data: { orderId: string; lat: number; lng: number }) => {
       if (data.orderId === order._id) {
         setDeliveryLocation({ lat: data.lat, lng: data.lng });
@@ -198,8 +191,6 @@ const Profile: React.FC = () => {
     };
     trackingListenerRef.current = handleDeliveryLocation;
     socket.on('delivery_location_update', handleDeliveryLocation);
-
-    // Join tracking room
     socket.emit('join_customer_tracking', order._id);
   };
 
@@ -217,8 +208,14 @@ const Profile: React.FC = () => {
     setTrackingInfo(null);
   }, [trackingOrder]);
 
+  // Stats
+  const totalOrders = orders.length;
+  const deliveredOrders = orders.filter(o => o.orderStatus === 'DELIVERED').length;
+  const activeOrders = orders.filter(o => ['CONFIRMED', 'DISPATCHED', 'OUT_FOR_DELIVERY'].includes(o.orderStatus)).length;
+  const totalSpent = orders.filter(o => o.paymentStatus === 'PAID').reduce((sum, o) => sum + o.totalAmount, 0);
+
   return (
-    <div className="animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
+    <div className="animate-fade-in profile-page-container" style={{ maxWidth: '800px', margin: '0 auto' }}>
       {/* Toast Notification */}
       {toast && (
         <div
@@ -237,129 +234,197 @@ const Profile: React.FC = () => {
         </div>
       )}
 
-      {/* Profile Card */}
-      <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 profile-header-card">
-        <div style={{ height: '96px', background: 'linear-gradient(135deg, #065f46, #059669, #10b981)' }} />
-        <div className="card-body" style={{ marginTop: '-40px' }}>
-          <div className="d-flex align-items-end gap-3 mb-3">
-            <div className="rounded-4 d-flex align-items-center justify-content-center text-white fw-bold fs-4 border border-4 border-white shadow-lg" style={{ width: '72px', height: '72px', minWidth: '72px', background: 'linear-gradient(135deg, #059669, #10b981)', fontSize: '24px' }}>
+      {/* Profile Header - Modern Design */}
+      <div className="profile-header-modern mb-4">
+        <div className="profile-cover" />
+        <div className="profile-info-section">
+          <div className="profile-avatar-wrapper">
+            <div className="profile-avatar">
               {user?.name?.[0]?.toUpperCase()}
             </div>
-            <div className="pb-1 min-w-0">
-              <h4 className="fw-bold mb-0 text-truncate" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '20px' }}>{user?.name}</h4>
-              <small className="text-muted text-truncate d-block"><i className="bi bi-envelope me-1"></i>{user?.email}</small>
+            <div className="profile-status-dot" />
+          </div>
+          <div className="profile-details">
+            <h2 className="profile-name">{user?.name}</h2>
+            <p className="profile-email">
+              <i className="bi bi-envelope-fill me-2"></i>
+              {user?.email}
+            </p>
+            <div className="profile-role-badge">
+              <i className="bi bi-patch-check-fill me-1"></i>
+              {user?.role?.replace('_', ' ') || 'USER'}
             </div>
           </div>
-          <span className="badge bg-success bg-opacity-10 text-success fw-medium" style={{ borderRadius: '20px', fontSize: '12px' }}>
-            <i className="bi bi-shield-check me-1"></i>{user?.role?.replace('_', ' ') || 'USER'}
-          </span>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="profile-stats">
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#ecfdf5', color: '#059669' }}>
+              <i className="bi bi-bag-check"></i>
+            </div>
+            <div className="stat-info">
+              <span className="stat-value">{totalOrders}</span>
+              <span className="stat-label">Orders</span>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#eff6ff', color: '#2563eb' }}>
+              <i className="bi bi-truck"></i>
+            </div>
+            <div className="stat-info">
+              <span className="stat-value">{activeOrders}</span>
+              <span className="stat-label">Active</span>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#f0fdf4', color: '#16a34a' }}>
+              <i className="bi bi-check-circle-fill"></i>
+            </div>
+            <div className="stat-info">
+              <span className="stat-value">{deliveredOrders}</span>
+              <span className="stat-label">Delivered</span>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: '#fefce8', color: '#a16207' }}>
+              <i className="bi bi-wallet2"></i>
+            </div>
+            <div className="stat-info">
+              <span className="stat-value">₹{totalSpent}</span>
+              <span className="stat-label">Spent</span>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Orders Section */}
-      <div>
-        <h5 className="fw-bold mb-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '18px' }}>
-          <i className="bi bi-bag text-success me-2"></i>
-          {isDeliveryPartner ? 'My Deliveries' : 'My Orders'}
-          {orders.length > 0 && <span className="badge bg-light text-muted ms-2" style={{ fontSize: '11px' }}>{orders.length}</span>}
-        </h5>
+      <div className="orders-section">
+        <div className="orders-header">
+          <div className="d-flex align-items-center gap-2">
+            <div className="orders-icon">
+              <i className="bi bi-bag"></i>
+            </div>
+            <h3 className="orders-title">{isDeliveryPartner ? 'My Deliveries' : 'My Orders'}</h3>
+          </div>
+          {orders.length > 0 && (
+            <span className="orders-count">{orders.length}</span>
+          )}
+        </div>
 
         {loading ? (
-          <div className="d-flex flex-column gap-3">
-            {[...Array(3)].map((_, i) => <div key={i} className="card border-0 shadow-sm rounded-4 p-4"><div className="skeleton" style={{ height: '60px' }}></div></div>)}
+          <div className="orders-grid">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="order-card-skeleton">
+                <div className="skeleton" style={{ height: '80px', borderRadius: '12px' }}></div>
+              </div>
+            ))}
           </div>
         ) : orders.length === 0 ? (
-          <div className="card border-0 shadow-sm rounded-4 p-5 text-center">
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}>📦</div>
-            <p className="text-muted fw-medium mb-1">{isDeliveryPartner ? 'No deliveries assigned yet' : 'No orders yet'}</p>
-            <small className="text-muted d-block mb-3">Start shopping to see your orders here</small>
-            {!isDeliveryPartner && <a href="/" className="btn btn-sm fw-semibold text-white rounded-3 px-4 py-2 fc-primary">Start Shopping</a>}
+          <div className="empty-orders-card">
+            <div className="empty-icon">📦</div>
+            <h4 className="empty-title">{isDeliveryPartner ? 'No deliveries yet' : 'No orders yet'}</h4>
+            <p className="empty-text">Start shopping to see your orders here</p>
+            {!isDeliveryPartner && (
+              <a href="/" className="empty-btn">
+                <i className="bi bi-shop me-2"></i>Start Shopping
+              </a>
+            )}
           </div>
         ) : (
-          <div className="d-flex flex-column gap-3">
-            {orders.map(order => (
-              <div key={order._id} className="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div className="card-body p-3 d-flex align-items-center justify-content-between flex-wrap gap-2 cursor-pointer" onClick={() => setExpandedOrder(expandedOrder === order._id ? null : order._id)}>
-                  <div className="d-flex align-items-center gap-3 flex-wrap flex-grow-1 min-w-0">
-                    <div className="rounded-3 d-flex align-items-center justify-content-center bg-success bg-opacity-10" style={{ width: '40px', height: '40px' }}>
-                      <i className="bi bi-box text-success"></i>
-                    </div>
-                    <div>
-                      <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                        <p className="fw-bold mb-0" style={{ fontSize: '13px' }}>#{order._id.slice(-8).toUpperCase()}</p>
-                        <span className="badge fw-medium" style={{ fontSize: '11px', borderRadius: '12px', padding: '4px 10px', ...(statusStyle[order.orderStatus] || { background: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb' }) }}>
-                          {order.orderStatus === 'OUT_FOR_DELIVERY' ? 'On The Way' : order.orderStatus}
-                        </span>
-                        {unreadOrderIds.has(order._id) && (
-                          <span style={{ width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%', display: 'inline-block' }}></span>
-                        )}
+          <div className="orders-grid">
+            {orders.map(order => {
+              const status = statusStyle[order.orderStatus] || statusStyle.PLACED;
+              return (
+                <div key={order._id} className={`order-card ${expandedOrder === order._id ? 'expanded' : ''}`}>
+                  <div className="order-card-main" onClick={() => setExpandedOrder(expandedOrder === order._id ? null : order._id)}>
+                    <div className="order-card-left">
+                      <div className="order-icon-box" style={{ background: status.background, color: status.color }}>
+                        <i className={`bi ${status.icon}`}></i>
                       </div>
-                      <small className="text-muted d-block" style={{ fontSize: '12px' }}>{order.userId?.name || 'Customer'} · {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</small>
-                    </div>
-                  </div>
-                  <div className="d-flex align-items-center gap-2">
-                    <span className="fw-bold text-success" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '15px' }}>₹{order.totalAmount}</span>
-                    {!isDeliveryPartner && (order.orderStatus === 'DISPATCHED' || order.orderStatus === 'OUT_FOR_DELIVERY') && (
-                      <button onClick={(e) => { e.stopPropagation(); openTracking(order); }} className="btn btn-sm rounded-2 p-1" style={{ background: '#f3e8ff', color: '#7c3aed', border: 'none', fontSize: '14px' }} title="Track Order">
-                        <i className="bi bi-geo-alt"></i>
-                      </button>
-                    )}
-                    <i className={`bi ${expandedOrder === order._id ? 'bi-chevron-up' : 'bi-chevron-down'} text-muted`}></i>
-                  </div>
-                </div>
-
-                {expandedOrder === order._id && (
-                  <div className="card-body border-top p-3 pt-3">
-                    <p className="fw-semibold text-muted mb-2" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Items</p>
-                    <div className="d-flex flex-column gap-2 mb-3">
-                      {order.products?.map((item: any) => (
-                        <div key={item._id} className="d-flex align-items-center gap-3 p-2 rounded-3" style={{ background: '#f9fafb' }}>
-                          {item.productId?.imageURL && <img src={item.productId.imageURL.startsWith('http') ? item.productId.imageURL : `${API_BASE}${item.productId.imageURL}`} alt="" className="rounded-2 flex-shrink-0" style={{ width: '40px', height: '40px', objectFit: 'cover' }} />}
-                          <div className="flex-grow-1 min-w-0">
-                            <p className="mb-0 fw-medium text-truncate" style={{ fontSize: '13px' }}>{item.productId?.name || 'Product'}</p>
-                            <small className="text-muted">₹{item.priceAtPurchase} x {item.quantity}</small>
-                          </div>
-                          <p className="fw-semibold mb-0 flex-shrink-0" style={{ fontSize: '13px' }}>₹{item.priceAtPurchase * item.quantity}</p>
+                      <div className="order-info">
+                        <div className="order-id-row">
+                          <span className="order-id">#{order._id.slice(-8).toUpperCase()}</span>
+                          {unreadOrderIds.has(order._id) && <span className="unread-dot"></span>}
                         </div>
-                      ))}
-                    </div>
-                    {order.deliveryAddress && (
-                      <div className="d-flex align-items-start gap-2 p-2 rounded-3 mb-3" style={{ background: '#f9fafb', fontSize: '13px' }}>
-                        <i className="bi bi-geo-alt text-success mt-1 flex-shrink-0"></i>
-                        <span className="text-muted">{order.deliveryAddress.street}, {order.deliveryAddress.city} - {order.deliveryAddress.zip}</span>
+                        <span className="order-status-badge" style={{ background: status.background, color: status.color, border: status.border }}>
+                          {order.orderStatus === 'OUT_FOR_DELIVERY' ? 'On The Way' : order.orderStatus.replace('_', ' ')}
+                        </span>
+                        <span className="order-date">
+                          {order.userId?.name || 'Customer'} · {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
                       </div>
-                    )}
-                    <div className="d-flex justify-content-between align-items-center pt-2 border-top">
-                      <small className="text-muted">Payment</small>
-                      <span className="badge fw-medium" style={{ fontSize: '11px', borderRadius: '12px', padding: '4px 10px', background: order.paymentStatus === 'PAID' ? '#dcfce7' : '#fef2f2', color: order.paymentStatus === 'PAID' ? '#16a34a' : '#dc2626', border: `1px solid ${order.paymentStatus === 'PAID' ? '#bbf7d0' : '#fecaca'}` }}>{order.paymentStatus}</span>
                     </div>
-                    {(order.orderStatus === 'DISPATCHED' || order.orderStatus === 'OUT_FOR_DELIVERY') && (
-                      <div className="d-flex gap-2 mt-3 flex-wrap">
-                        {!isDeliveryPartner && (
-                          <button onClick={() => openTracking(order)} className="btn flex-grow-1 fw-semibold text-white rounded-3 py-2 d-flex align-items-center justify-content-center gap-2" style={{ background: '#7c3aed', fontSize: '13px', minWidth: '120px' }}>
+                    <div className="order-card-right">
+                      <span className="order-amount">₹{order.totalAmount}</span>
+                      {!isDeliveryPartner && (order.orderStatus === 'DISPATCHED' || order.orderStatus === 'OUT_FOR_DELIVERY') && (
+                        <button onClick={(e) => { e.stopPropagation(); openTracking(order); }} className="track-btn" title="Track Order">
+                          <i className="bi bi-geo-alt"></i>
+                        </button>
+                      )}
+                      <i className={`bi ${expandedOrder === order._id ? 'bi-chevron-up' : 'bi-chevron-down'} expand-icon`}></i>
+                    </div>
+                  </div>
+
+                  {expandedOrder === order._id && (
+                    <div className="order-card-expanded">
+                      <div className="expanded-section">
+                        <p className="section-label">Items</p>
+                        <div className="items-list">
+                          {order.products?.map((item: any) => (
+                            <div key={item._id} className="item-row">
+                              {item.productId?.imageURL && (
+                                <img src={item.productId.imageURL.startsWith('http') ? item.productId.imageURL : `${API_BASE}${item.productId.imageURL}`} alt="" className="item-image" />
+                              )}
+                              <div className="item-details">
+                                <span className="item-name">{item.productId?.name || 'Product'}</span>
+                                <span className="item-price">₹{item.priceAtPurchase} × {item.quantity}</span>
+                              </div>
+                              <span className="item-total">₹{item.priceAtPurchase * item.quantity}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {order.deliveryAddress && (
+                        <div className="address-box">
+                          <i className="bi bi-geo-alt-fill"></i>
+                          <span>{order.deliveryAddress.street}{order.deliveryAddress.building ? `, ${order.deliveryAddress.building}` : ''}{order.deliveryAddress.landmark ? ` (Near ${order.deliveryAddress.landmark})` : ''}, {order.deliveryAddress.city} - {order.deliveryAddress.zip}</span>
+                        </div>
+                      )}
+
+                      <div className="payment-row">
+                        <span className="payment-label">Payment</span>
+                        <span className="payment-badge" style={{ background: order.paymentStatus === 'PAID' ? '#dcfce7' : '#fef2f2', color: order.paymentStatus === 'PAID' ? '#16a34a' : '#dc2626' }}>
+                          <i className={`bi ${order.paymentStatus === 'PAID' ? 'bi-check-circle-fill' : 'bi-clock'} me-1`}></i>
+                          {order.paymentStatus}
+                        </span>
+                      </div>
+
+                      <div className="action-buttons">
+                        {(order.orderStatus === 'DISPATCHED' || order.orderStatus === 'OUT_FOR_DELIVERY') && !isDeliveryPartner && (
+                          <button onClick={() => openTracking(order)} className="action-btn tracking">
                             <i className="bi bi-geo-alt"></i> Track Order
                           </button>
                         )}
-                        <button onClick={() => openChat(order)} className={`btn flex-grow-1 fw-semibold text-white rounded-3 py-2 fc-primary d-flex align-items-center justify-content-center gap-2 position-relative`} style={{ fontSize: '13px', minWidth: '120px' }}>
-                          <i className="bi bi-chat-dots"></i>
-                          {isDeliveryPartner ? 'Chat with Customer' : 'Chat'}
-                          {unreadOrderIds.has(order._id) && (
-                            <span className="position-absolute top-0 start-100 translate-middle" style={{ width: '10px', height: '10px', background: '#ef4444', borderRadius: '50%', border: '2px solid white' }}></span>
-                          )}
-                        </button>
+                        {(order.orderStatus === 'DISPATCHED' || order.orderStatus === 'OUT_FOR_DELIVERY') && (
+                          <button onClick={() => openChat(order)} className="action-btn chat">
+                            <i className="bi bi-chat-dots"></i>
+                            {isDeliveryPartner ? 'Chat with Customer' : 'Chat'}
+                            {unreadOrderIds.has(order._id) && <span className="chat-unread-dot"></span>}
+                          </button>
+                        )}
+                        {!isDeliveryPartner && (
+                          <button onClick={() => setOrderHelpOrder(order)} className="action-btn help">
+                            <i className="bi bi-headset"></i> Order Help
+                          </button>
+                        )}
                       </div>
-                    )}
-                    {!isDeliveryPartner && (
-                      <div className="d-flex gap-2 mt-2">
-                        <button onClick={() => setOrderHelpOrder(order)} className="btn w-100 fw-semibold rounded-3 py-2 d-flex align-items-center justify-content-center gap-2" style={{ fontSize: '13px', background: '#f0fdf4', color: '#059669', border: '1.5px solid #bbf7d0' }}>
-                          <i className="bi bi-headset"></i> Order Help
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -368,16 +433,16 @@ const Profile: React.FC = () => {
       {chatOrder && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-end align-items-md-center justify-content-center p-0 p-md-3" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1060 }}>
           <div className="card border-0 shadow-lg rounded-top-4 rounded-md-4 d-flex flex-column animate-scale-in" style={{ width: '100%', maxWidth: '420px', height: '100vh', maxHeight: '100vh', borderRadius: '0' }}>
-              <div className="card-header d-flex align-items-center justify-content-between border-0 p-3" style={{ background: '#ecfdf5' }}>
-                <div className="d-flex align-items-center gap-3 min-w-0">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0" style={{ width: '36px', height: '36px', fontSize: '13px', background: 'linear-gradient(135deg, #059669, #10b981)' }}>
-                    {isDeliveryPartner ? 'U' : 'D'}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="fw-semibold mb-0 text-truncate" style={{ fontSize: '13px' }}>{isDeliveryPartner ? chatOrder.userId?.name || 'Customer' : 'Delivery Partner'}</p>
-                    <small className="text-muted">#{chatOrder._id.slice(-6).toUpperCase()}</small>
-                  </div>
+            <div className="card-header d-flex align-items-center justify-content-between border-0 p-3" style={{ background: '#ecfdf5' }}>
+              <div className="d-flex align-items-center gap-3 min-w-0">
+                <div className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0" style={{ width: '36px', height: '36px', fontSize: '13px', background: 'linear-gradient(135deg, #059669, #10b981)' }}>
+                  {isDeliveryPartner ? 'U' : 'D'}
                 </div>
+                <div className="min-w-0">
+                  <p className="fw-semibold mb-0 text-truncate" style={{ fontSize: '13px' }}>{isDeliveryPartner ? chatOrder.userId?.name || 'Customer' : 'Delivery Partner'}</p>
+                  <small className="text-muted">#{chatOrder._id.slice(-6).toUpperCase()}</small>
+                </div>
+              </div>
               <button onClick={closeChat} className="btn btn-sm text-muted border-0"><i className="bi bi-x-lg"></i></button>
             </div>
             <div className="card-body flex-grow-1 overflow-auto p-3" style={{ background: '#f9fafb' }}>
@@ -408,13 +473,12 @@ const Profile: React.FC = () => {
           </div>
         </div>
       )}
+
       {/* Tracking Modal */}
       {trackingOrder && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-end align-items-md-center justify-content-center p-0 p-md-3" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1060 }} onClick={(e) => { if (e.target === e.currentTarget) closeTracking(); }}>
           <div className="card border-0 shadow-lg rounded-top-4 rounded-md-4 d-flex flex-column animate-scale-in" style={{ width: '100%', maxWidth: '500px', height: '100vh', maxHeight: '100vh', borderRadius: '0' }}>
-            {/* Header */}
             <div className="card-header border-0 p-0" style={{ borderRadius: '16px 16px 0 0', position: 'relative', zIndex: 1100 }}>
-              {/* Delivery Partner Info Bar */}
               <div className="p-3" style={{ background: 'linear-gradient(135deg, #7c3aed, #a78bfa)' }}>
                 <div className="d-flex align-items-center justify-content-between mb-2">
                   <div className="d-flex align-items-center gap-2">
@@ -424,7 +488,7 @@ const Profile: React.FC = () => {
                   <button onClick={closeTracking} className="btn btn-sm text-white border-0 p-1 rounded-circle" style={{ width: '28px', height: '28px', background: 'rgba(255,255,255,0.2)', fontSize: '14px', position: 'relative', zIndex: 1100 }}><i className="bi bi-x-lg"></i></button>
                 </div>
                 <div className="d-flex align-items-center gap-3">
-                  <div className="rounded-circle d-flex align-items-center justify-center text-white fw-bold" style={{ width: '44px', height: '44px', fontSize: '16px', background: 'rgba(255,255,255,0.2)' }}>
+                  <div className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style={{ width: '44px', height: '44px', fontSize: '16px', background: 'rgba(255,255,255,0.2)' }}>
                     {trackingOrder.deliveryPartnerId?.name?.[0]?.toUpperCase() || 'D'}
                   </div>
                   <div className="flex-grow-1">
@@ -442,7 +506,6 @@ const Profile: React.FC = () => {
                   )}
                 </div>
               </div>
-              {/* Order Info Bar */}
               <div className="px-3 py-2 d-flex align-items-center justify-content-between" style={{ background: '#f8f7f4', borderBottom: '1px solid #e5e7eb' }}>
                 <div className="d-flex align-items-center gap-2">
                   <span className="fw-bold" style={{ fontSize: '12px', fontFamily: 'monospace', color: '#7c3aed' }}>
@@ -456,7 +519,6 @@ const Profile: React.FC = () => {
               </div>
             </div>
 
-            {/* Map */}
             <div className="flex-grow-1 overflow-hidden">
               <DeliveryTrackingMap
                 deliveryLocation={deliveryLocation}
@@ -469,7 +531,6 @@ const Profile: React.FC = () => {
               />
             </div>
 
-            {/* Bottom details */}
             <div className="card-footer border-0 px-3 py-2 bg-white rounded-bottom-4">
               <div className="d-flex align-items-center justify-content-between">
                 <div className="d-flex align-items-center gap-2">
@@ -493,6 +554,7 @@ const Profile: React.FC = () => {
           </div>
         </div>
       )}
+
       {/* Order Help Chat Modal */}
       {orderHelpOrder && (
         <OrderHelpChat order={orderHelpOrder} onClose={() => setOrderHelpOrder(null)} />

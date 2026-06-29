@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../store/store';
 import { removeFromCart, updateQuantity, clearCart } from '../store/cartSlice';
-import { orderService } from '../services/api';
+import { orderService, adminService, userService } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import LocationSearchInput from '../components/LocationSearchInput';
+
+interface Settings {
+  handlingFee: number;
+  gstRate: number;
+  freeDeliveryAbove: number;
+  deliveryFee: number;
+}
 
 const Cart: React.FC = () => {
   const { user } = useAuth();
@@ -15,9 +22,37 @@ const Cart: React.FC = () => {
   const [address, setAddress] = useState<{ street: string; building: string; landmark: string; city: string; zip: string; lat?: number; lng?: number }>({ street: '', building: '', landmark: '', city: '', zip: '' });
   const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [settings, setSettings] = useState<Settings>({ handlingFee: 5, gstRate: 5, freeDeliveryAbove: 200, deliveryFee: 30 });
+  const [showTaxDetails, setShowTaxDetails] = useState(false);
+  const [userPremium, setUserPremium] = useState<any>(null);
+  const [userOffers, setUserOffers] = useState<any[]>([]);
 
-  const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  useEffect(() => {
+    adminService.getSettings().then(res => setSettings(res.data)).catch(() => {});
+    if (user) {
+      userService.getMyPremium().then(res => setUserPremium(res.data)).catch(() => {});
+      userService.getMyOffers().then(res => setUserOffers(res.data)).catch(() => {});
+    }
+  }, [user]);
+
+  // Determine effective delivery settings
+  const effectiveFreeDeliveryAbove = userPremium?.planId?.freeDeliveryAbove ?? (userOffers.length > 0 ? Math.min(...userOffers.map((o: any) => o.freeDeliveryAbove).filter(Boolean)) : settings.freeDeliveryAbove);
+  const effectiveDeliveryFee = userPremium?.planId?.deliveryFee ?? (userOffers.length > 0 ? Math.min(...userOffers.map((o: any) => o.deliveryFee).filter(Boolean)) : settings.deliveryFee);
+  const effectiveDiscount = userPremium?.planId?.discountPercent ?? 0;
+
+  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const taxBreakdown = cart.map(item => {
+    const itemTotal = item.price * item.quantity;
+    const tax = itemTotal * (settings.gstRate / 100);
+    return { name: item.name, quantity: item.quantity, price: item.price, itemTotal, tax };
+  });
+  const totalTax = taxBreakdown.reduce((sum, item) => sum + item.tax, 0);
+  const premiumDiscount = effectiveDiscount > 0 ? subtotal * (effectiveDiscount / 100) : 0;
+  const handlingFee = settings.handlingFee;
+  const deliveryFee = subtotal >= effectiveFreeDeliveryAbove ? 0 : effectiveDeliveryFee;
+  const grandTotal = subtotal - premiumDiscount + totalTax + handlingFee + deliveryFee;
 
   const handleCheckout = async () => {
     if (!user) return alert('Please login to checkout');
@@ -78,7 +113,7 @@ const Cart: React.FC = () => {
           </div>
           <div>
             <h4 className="fw-bold mb-0" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-0.3px', fontSize: '20px' }}>Your Cart</h4>
-            {cart.length > 0 && <small className="text-muted">{totalItems} item{totalItems !== 1 ? 's' : ''} • ₹{totalAmount.toFixed(2)}</small>}
+            {cart.length > 0 && <small className="text-muted">{totalItems} item{totalItems !== 1 ? 's' : ''} • ₹{subtotal.toFixed(2)}</small>}
           </div>
         </div>
         <button onClick={() => navigate('/')} className="btn btn-sm fw-medium rounded-3 px-3 py-2" style={{ background: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb', transition: 'all 0.2s ease', fontSize: '13px' }}
@@ -128,10 +163,13 @@ const Cart: React.FC = () => {
                           <i className="bi bi-dash"></i>
                         </button>
                         <span>{item.quantity}</span>
-                        <button onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }))}>
+                        <button onClick={() => dispatch(updateQuantity({ id: item.id, quantity: item.quantity + 1 }))} disabled={item.quantity >= item.stockQuantity}>
                           <i className="bi bi-plus"></i>
                         </button>
                       </div>
+                      {item.quantity >= item.stockQuantity && (
+                        <small className="text-warning fw-medium" style={{ fontSize: '10px' }}>Max</small>
+                      )}
                       <button onClick={() => dispatch(removeFromCart(item.id))} className="btn btn-sm d-flex align-items-center justify-content-center rounded-2 border-0" style={{ width: '36px', height: '36px', background: '#fef2f2', color: '#dc2626' }}>
                         <i className="bi bi-trash" style={{ fontSize: '14px' }}></i>
                       </button>
@@ -202,22 +240,79 @@ const Cart: React.FC = () => {
 
               {/* Price Breakdown */}
               <div style={{ background: '#f9fafb', borderRadius: '12px', padding: '16px' }}>
+                {userPremium && (
+                  <div className="d-flex align-items-center gap-2 mb-2 p-2 rounded-2" style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', fontSize: '12px', color: '#059669' }}>
+                    <i className="bi bi-gem"></i>
+                    <span className="fw-semibold">{userPremium.planId?.name} Member</span>
+                    {effectiveDiscount > 0 && <span className="fw-bold">• {effectiveDiscount}% off</span>}
+                  </div>
+                )}
+                {userOffers.length > 0 && !userPremium && (
+                  <div className="d-flex align-items-center gap-2 mb-2 p-2 rounded-2" style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', fontSize: '12px', color: '#059669' }}>
+                    <i className="bi bi-tag"></i>
+                    <span className="fw-semibold">{userOffers.length} offer{userOffers.length > 1 ? 's' : ''} applied</span>
+                  </div>
+                )}
+
                 <div className="d-flex justify-content-between text-muted mb-2" style={{ fontSize: '14px' }}>
                   <span>Subtotal ({totalItems} items)</span>
-                  <span className="fw-medium">₹{totalAmount.toFixed(2)}</span>
+                  <span className="fw-medium">₹{subtotal.toFixed(2)}</span>
                 </div>
+
+                {premiumDiscount > 0 && (
+                  <div className="d-flex justify-content-between mb-2" style={{ fontSize: '14px', color: '#059669' }}>
+                    <span className="fw-medium">Premium Discount ({effectiveDiscount}%)</span>
+                    <span className="fw-medium">-₹{premiumDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+
+                <div className="d-flex justify-content-between align-items-center mb-2" style={{ fontSize: '14px' }}>
+                  <span className="text-muted d-flex align-items-center gap-1">
+                    Delivery
+                    {deliveryFee === 0 && <span className="fw-semibold" style={{ color: '#059669', fontSize: '12px' }}>(Free above ₹{effectiveFreeDeliveryAbove})</span>}
+                  </span>
+                  {deliveryFee === 0 ? (
+                    <span className="fw-semibold" style={{ color: '#059669' }}>Free</span>
+                  ) : (
+                    <span className="fw-medium">₹{deliveryFee.toFixed(2)}</span>
+                  )}
+                </div>
+
+                <div className="d-flex justify-content-between align-items-center mb-2" style={{ fontSize: '14px' }}>
+                  <span className="text-muted d-flex align-items-center gap-1">
+                    GST ({settings.gstRate}%)
+                    <span
+                      className="d-inline-flex align-items-center justify-content-center rounded-circle"
+                      style={{ width: '16px', height: '16px', background: '#e5e7eb', cursor: 'pointer', fontSize: '10px', fontWeight: 600, color: '#6b7280', position: 'relative' }}
+                      onClick={() => setShowTaxDetails(!showTaxDetails)}
+                    >
+                      i
+                    </span>
+                  </span>
+                  <span className="fw-medium">₹{totalTax.toFixed(2)}</span>
+                </div>
+
+                {showTaxDetails && (
+                  <div className="mb-2 p-2 rounded-2" style={{ background: '#ffffff', border: '1px solid #e5e7eb', fontSize: '12px' }}>
+                    <div className="fw-semibold mb-1" style={{ color: '#374151', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Tax Breakdown</div>
+                    {taxBreakdown.map((item, i) => (
+                      <div key={i} className="d-flex justify-content-between" style={{ color: '#6b7280', padding: '2px 0' }}>
+                        <span>{item.name} × {item.quantity}</span>
+                        <span>₹{item.tax.toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="d-flex justify-content-between text-muted mb-2" style={{ fontSize: '14px' }}>
-                  <span>Delivery</span>
-                  <span className="fw-semibold" style={{ color: '#059669' }}>Free</span>
+                  <span>Handling Fee</span>
+                  <span className="fw-medium">₹{handlingFee.toFixed(2)}</span>
                 </div>
-                <div className="d-flex justify-content-between text-muted mb-2" style={{ fontSize: '14px' }}>
-                  <span>Taxes</span>
-                  <span className="fw-medium">Included</span>
-                </div>
+
                 <div style={{ height: '1px', background: '#e5e7eb', margin: '12px 0' }}></div>
                 <div className="d-flex justify-content-between">
                   <span className="fw-bold" style={{ fontSize: '16px' }}>Total</span>
-                  <span className="fw-bold" style={{ fontSize: '20px', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#059669' }}>₹{totalAmount.toFixed(2)}</span>
+                  <span className="fw-bold" style={{ fontSize: '20px', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#059669' }}>₹{grandTotal.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -226,7 +321,7 @@ const Cart: React.FC = () => {
                 {loading ? (
                   <><span className="spinner-border spinner-border-sm"></span> Processing...</>
                 ) : (
-                  <><i className="bi bi-credit-card me-1"></i> Pay ₹{totalAmount.toFixed(2)}</>
+                  <><i className="bi bi-credit-card me-1"></i> Pay ₹{grandTotal.toFixed(2)}</>
                 )}
               </button>
 

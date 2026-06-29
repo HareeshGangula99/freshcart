@@ -9,9 +9,26 @@ interface Product {
   description: string;
   price: number;
   category: string;
+  uom: string;
+  uomValue: number;
   imageURL: string;
   stockQuantity: number;
 }
+
+const UOM_LABELS: Record<string, string> = {
+  kg: 'kg',
+  g: 'g',
+  qty: 'qty',
+  ltr: 'ltr',
+  ml: 'ml',
+  dozen: 'dozen',
+  piece: 'pc',
+};
+
+const formatPrice = (price: number, uom: string, uomValue: number) => {
+  const unit = UOM_LABELS[uom] || 'qty';
+  return `₹${price} / ${uomValue}${unit}`;
+};
 
 const categoryMeta: Record<string, { emoji: string; bg: string; color: string; gradient: string }> = {
   Fruits: { emoji: '🍎', bg: '#fef2f2', color: '#dc2626', gradient: 'linear-gradient(135deg, #fef2f2, #fee2e2)' },
@@ -61,19 +78,35 @@ const Home: React.FC = () => {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [category, search, fetchProducts]);
 
-  // Group products by category
+  // Group products by category and split into rows
   const groupedProducts = useMemo(() => {
+    const PRODUCTS_PER_ROW = 8;
+    
     if (category || search) {
-      // If filtering, show flat list as single row
-      return [{ name: category || 'Search Results', products }];
+      // If filtering, split into rows of 8
+      const rows: { name: string; products: Product[] }[] = [];
+      for (let i = 0; i < products.length; i += PRODUCTS_PER_ROW) {
+        rows.push({
+          name: category || 'Search Results',
+          products: products.slice(i, i + PRODUCTS_PER_ROW)
+        });
+      }
+      return rows.length > 0 ? rows : [{ name: category || 'Search Results', products: [] }];
     }
+    
     const groups: { name: string; products: Product[] }[] = [];
     const categoryOrder = ['Fruits', 'Vegetables', 'Dairy', 'Snacks', 'Bakery', 'Beverages', 'Grains', 'Meat', 'Chocolate'];
     
     categoryOrder.forEach(cat => {
       const catProducts = products.filter(p => p.category === cat);
       if (catProducts.length > 0) {
-        groups.push({ name: cat, products: catProducts });
+        // Split into rows of 8
+        for (let i = 0; i < catProducts.length; i += PRODUCTS_PER_ROW) {
+          groups.push({
+            name: cat,
+            products: catProducts.slice(i, i + PRODUCTS_PER_ROW)
+          });
+        }
       }
     });
     
@@ -83,7 +116,12 @@ const Home: React.FC = () => {
       const remainingCategories = [...new Set(remaining.map(p => p.category))];
       remainingCategories.forEach(cat => {
         const catProducts = remaining.filter(p => p.category === cat);
-        groups.push({ name: cat, products: catProducts });
+        for (let i = 0; i < catProducts.length; i += PRODUCTS_PER_ROW) {
+          groups.push({
+            name: cat,
+            products: catProducts.slice(i, i + PRODUCTS_PER_ROW)
+          });
+        }
       });
     }
     
@@ -249,16 +287,17 @@ const Home: React.FC = () => {
                               <div className="product-row-info">
                                 <h4 className="product-row-name">{product.name}</h4>
                                 <p className="product-row-desc">{product.description || 'Fresh product'}</p>
-                                <div className="d-flex align-items-center justify-content-between">
+                                <div className="product-row-price-row">
                                   <span className="product-row-price">₹{product.price}</span>
-                                  {!isOutOfStock ? (
-                                    <span className="product-row-view-btn">
-                                      View <i className="bi bi-arrow-right ms-1"></i>
-                                    </span>
-                                  ) : (
-                                    <span className="product-row-unavailable">Unavailable</span>
-                                  )}
+                                  <span className="product-row-unit">/ {product.uomValue || 1}{UOM_LABELS[product.uom] || 'qty'}</span>
                                 </div>
+                                {!isOutOfStock ? (
+                                  <span className="product-row-view-btn">
+                                    View <i className="bi bi-arrow-right ms-1"></i>
+                                  </span>
+                                ) : (
+                                  <span className="product-row-unavailable">Unavailable</span>
+                                )}
                               </div>
                             </div>
                           </Link>
