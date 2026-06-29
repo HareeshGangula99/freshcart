@@ -6,7 +6,47 @@ import { useDispatch } from 'react-redux';
 import { addToCart } from '../store/cartSlice';
 
 const ScrollRow: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <div className="product-row-scroll">{children}</div>;
+  const ref = useRef<HTMLDivElement>(null);
+  const lockedRef = useRef(false);
+  const startX = useRef(0);
+  const startY = useRef(0);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const onStart = (e: TouchEvent) => {
+      startX.current = e.touches[0].clientX;
+      startY.current = e.touches[0].clientY;
+      lockedRef.current = false;
+    };
+
+    const onMove = (e: TouchEvent) => {
+      const dx = Math.abs(e.touches[0].clientX - startX.current);
+      const dy = Math.abs(e.touches[0].clientY - startY.current);
+      if (!lockedRef.current && dx > 8 && dx > dy * 1.2) {
+        lockedRef.current = true;
+      }
+      if (lockedRef.current) {
+        e.preventDefault();
+      }
+    };
+
+    const onEnd = () => {
+      lockedRef.current = false;
+    };
+
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove', onMove, { passive: false });
+    el.addEventListener('touchend', onEnd, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onEnd);
+    };
+  }, []);
+
+  return <div ref={ref} className="product-row-scroll">{children}</div>;
 };
 
 interface Product {
