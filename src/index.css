@@ -380,23 +380,17 @@ body {
 
 /* ===== ZEPTO-STYLE HORIZONTAL SCROLL LAYOUT ===== */
 .zepto-layout {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  min-height: 100%;
 }
 
 .zepto-header {
-  flex-shrink: 0;
-  background: #f8f7f4;
+  position: sticky;
+  top: 0;
   z-index: 100;
+  background: #f8f7f4;
 }
 
 .zepto-content {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
   padding-bottom: 20px;
 }
 
@@ -585,16 +579,8 @@ body {
 
 /* Desktop: Normal layout */
 @media (min-width: 992px) {
-  .zepto-layout {
-    height: auto;
-    overflow: visible;
-  }
   .zepto-header {
     position: static;
-  }
-  .zepto-content {
-    overflow: visible;
-    padding-bottom: 0;
   }
   .product-row-scroll {
     overflow-x: visible;
