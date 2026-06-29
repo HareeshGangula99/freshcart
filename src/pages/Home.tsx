@@ -25,11 +25,6 @@ const UOM_LABELS: Record<string, string> = {
   piece: 'pc',
 };
 
-const formatPrice = (price: number, uom: string, uomValue: number) => {
-  const unit = UOM_LABELS[uom] || 'qty';
-  return `₹${price} / ${uomValue}${unit}`;
-};
-
 const categoryMeta: Record<string, { emoji: string; bg: string; color: string; gradient: string }> = {
   Fruits: { emoji: '🍎', bg: '#fef2f2', color: '#dc2626', gradient: 'linear-gradient(135deg, #fef2f2, #fee2e2)' },
   Vegetables: { emoji: '🥬', bg: '#f0fdf4', color: '#16a34a', gradient: 'linear-gradient(135deg, #f0fdf4, #dcfce7)' },
