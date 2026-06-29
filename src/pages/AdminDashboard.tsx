@@ -53,6 +53,7 @@ const AdminDashboard: React.FC = () => {
   const [premiumSubscribers, setPremiumSubscribers] = useState<any[]>([]);
   const [newOffer, setNewOffer] = useState({ name: '', userIds: [] as string[], freeDeliveryAbove: 0, deliveryFee: 0, expiresAt: '' });
   const [selectedOfferUsers, setSelectedOfferUsers] = useState<string[]>([]);
+  const [offerUserSearch, setOfferUserSearch] = useState('');
   const [newPlan, setNewPlan] = useState({ name: '', type: 'monthly' as 'weekly' | 'monthly', price: 0, freeDeliveryAbove: 0, deliveryFee: 0, discountPercent: 0 });
 
   useEffect(() => { fetchData(); }, []);
@@ -826,17 +827,40 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="mb-3">
               <label className="form-label fw-medium" style={{ fontSize: '12px' }}>Select Users</label>
-              <div className="d-flex flex-wrap gap-1 p-2 rounded-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb', maxHeight: '120px', overflowY: 'auto' }}>
-                {allUsers.map((u: any) => (
-                  <label key={u._id} className="d-flex align-items-center gap-1 px-2 py-1 rounded-2" style={{ fontSize: '11px', cursor: 'pointer', background: selectedOfferUsers.includes(u._id) ? '#ecfdf5' : '#fff', border: `1px solid ${selectedOfferUsers.includes(u._id) ? '#a7f3d0' : '#e5e7eb'}` }}>
-                    <input type="checkbox" className="form-check-input m-0" style={{ width: '12px', height: '12px' }}
+              <input type="text" className="form-control fc-input mb-2" placeholder="Search users..." style={{ fontSize: '12px' }}
+                value={offerUserSearch} onChange={e => setOfferUserSearch(e.target.value)} />
+              <div className="d-flex gap-2 mb-2">
+                <button type="button" className="btn btn-sm rounded-2 fw-medium" style={{ fontSize: '11px', background: '#f0fdf4', color: '#059669', border: '1px solid #dcfce7' }}
+                  onClick={() => {
+                    const filtered = allUsers.filter((u: any) => u.name.toLowerCase().includes(offerUserSearch.toLowerCase()));
+                    const allSelected = filtered.every((u: any) => selectedOfferUsers.includes(u._id));
+                    if (allSelected) {
+                      setSelectedOfferUsers(prev => prev.filter(id => !filtered.find((u: any) => u._id === id)));
+                    } else {
+                      const newIds = filtered.map((u: any) => u._id);
+                      setSelectedOfferUsers(prev => [...new Set([...prev, ...newIds])]);
+                    }
+                  }}>
+                  {allUsers.filter((u: any) => u.name.toLowerCase().includes(offerUserSearch.toLowerCase())).every((u: any) => selectedOfferUsers.includes(u._id)) ? 'Deselect All' : 'Select All'}
+                </button>
+                <span className="d-flex align-items-center text-muted" style={{ fontSize: '11px' }}>
+                  {selectedOfferUsers.length} / {allUsers.length} selected
+                </span>
+              </div>
+              <div className="d-flex flex-column gap-1 p-2 rounded-3" style={{ background: '#f9fafb', border: '1px solid #e5e7eb', maxHeight: '200px', overflowY: 'auto' }}>
+                {allUsers.filter((u: any) => u.name.toLowerCase().includes(offerUserSearch.toLowerCase())).length === 0 && (
+                  <small className="text-muted text-center py-2" style={{ fontSize: '11px' }}>No users found</small>
+                )}
+                {allUsers.filter((u: any) => u.name.toLowerCase().includes(offerUserSearch.toLowerCase())).map((u: any) => (
+                  <label key={u._id} className="d-flex align-items-center gap-2 px-2 py-1.5 rounded-2" style={{ fontSize: '12px', cursor: 'pointer', background: selectedOfferUsers.includes(u._id) ? '#ecfdf5' : '#fff', border: `1px solid ${selectedOfferUsers.includes(u._id) ? '#a7f3d0' : '#e5e7eb'}`, transition: 'all 0.15s ease' }}>
+                    <input type="checkbox" className="form-check-input m-0" style={{ width: '14px', height: '14px' }}
                       checked={selectedOfferUsers.includes(u._id)}
                       onChange={() => setSelectedOfferUsers(prev => prev.includes(u._id) ? prev.filter(id => id !== u._id) : [...prev, u._id])} />
-                    {u.name}
+                    <span className="fw-medium">{u.name}</span>
+                    <small className="text-muted ms-auto" style={{ fontSize: '10px' }}>{u.email}</small>
                   </label>
                 ))}
               </div>
-              <small className="text-muted" style={{ fontSize: '11px' }}>{selectedOfferUsers.length} users selected</small>
             </div>
             <button onClick={async () => {
               if (!newOffer.name || selectedOfferUsers.length === 0) return alert('Enter offer name and select users');

@@ -1,7 +1,54 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { productService } from '../services/api';
 import { API_BASE } from '../config';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { addToCart } from '../store/cartSlice';
+
+// Prevent vertical page scroll while horizontally scrolling a row
+const useHorizontalScrollLock = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let startX = 0, startY = 0, locked = false;
+    const onTouchStart = (e: TouchEvent) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      locked = false;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      const dx = Math.abs(e.touches[0].clientX - startX);
+      const dy = Math.abs(e.touches[0].clientY - startY);
+      if (!locked && dx > dy && dx > 5) {
+        locked = true;
+        document.body.style.overflow = 'hidden';
+      }
+      if (locked) {
+        e.preventDefault();
+      }
+    };
+    const onTouchEnd = () => {
+      locked = false;
+      document.body.style.overflow = '';
+    };
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+      document.body.style.overflow = '';
+    };
+  }, []);
+  return ref;
+};
+
+const ScrollRow: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const ref = useHorizontalScrollLock();
+  return <div ref={ref} className="product-row-scroll">{children}</div>;
+};
 
 interface Product {
   _id: string;
@@ -46,7 +93,10 @@ const Home: React.FC = () => {
   const [category, setCategory] = useState('');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [addedId, setAddedId] = useState<string | null>(null);
   const debounceRef = useRef<any>(null);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     productService.getCategories().then(res => setCategories(res.data)).catch(() => {});
@@ -188,7 +238,7 @@ const Home: React.FC = () => {
 
         {/* Category Filters */}
         <div className="category-filters-wrapper mt-2">
-          <div className="d-flex align-items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
+          <div className="d-flex align-items-center gap-2 overflow-x-auto hide-scrollbar pb-1" style={{ touchAction: 'pan-x', overscrollBehaviorX: 'contain' }}>
             <button
               onClick={() => setCategory('')}
               className={`category-pill flex-shrink-0 ${category === '' ? 'active' : ''}`}
@@ -251,16 +301,16 @@ const Home: React.FC = () => {
                   </div>
 
                   {/* Horizontal Scrollable Products Row */}
-                  <div className="product-row-scroll">
+                  <ScrollRow>
                     <div className="product-row-inner">
                       {group.products.map((product) => {
                         const pMeta = getCategoryMeta(product.category);
                         const isOutOfStock = product.stockQuantity === 0;
                         return (
-                          <Link key={product._id} to={`/product/${product._id}`} className="product-row-card-link">
+                          <div key={product._id} className="product-row-card-link">
                             <div className="product-row-card">
                               {/* Product Image */}
-                              <div className="product-row-img-wrapper" style={{ background: pMeta.gradient }}>
+                              <Link to={`/product/${product._id}`} className="product-row-img-wrapper" style={{ background: pMeta.gradient }}>
                                 <img
                                   src={product.imageURL ? (product.imageURL.startsWith('http') ? product.imageURL : `${API_BASE}${product.imageURL}`) : `https://placehold.co/400x300/f0fdf4/16a34a?text=${encodeURIComponent(pMeta.emoji)}`}
                                   alt={product.name}
@@ -271,35 +321,44 @@ const Home: React.FC = () => {
                                     <span>Out of Stock</span>
                                   </div>
                                 )}
-                                {!isOutOfStock && (
-                                  <div className="product-row-quick-view">
-                                    <i className="bi bi-arrow-up-right"></i>
-                                  </div>
-                                )}
-                              </div>
+                              </Link>
 
                               {/* Product Info */}
                               <div className="product-row-info">
-                                <h4 className="product-row-name">{product.name}</h4>
-                                <p className="product-row-desc">{product.description || 'Fresh product'}</p>
+                                <Link to={`/product/${product._id}`} className="text-decoration-none">
+                                  <h4 className="product-row-name">{product.name}</h4>
+                                </Link>
                                 <div className="product-row-price-row">
                                   <span className="product-row-price">₹{product.price}</span>
                                   <span className="product-row-unit">/ {product.uomValue || 1}{UOM_LABELS[product.uom] || 'qty'}</span>
                                 </div>
                                 {!isOutOfStock ? (
-                                  <span className="product-row-view-btn">
-                                    View <i className="bi bi-arrow-right ms-1"></i>
-                                  </span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      const imageURL = product.imageURL ? (product.imageURL.startsWith('http') ? product.imageURL : `${API_BASE}${product.imageURL}`) : `https://placehold.co/400x300/f0fdf4/16a34a?text=${encodeURIComponent(pMeta.emoji)}`;
+                                      dispatch(addToCart({ id: product._id, name: product.name, price: product.price, quantity: 1, imageURL, stockQuantity: product.stockQuantity }));
+                                      setAddedId(product._id);
+                                      setTimeout(() => setAddedId(null), 1500);
+                                    }}
+                                    className={`product-row-add-btn ${addedId === product._id ? 'added' : ''}`}
+                                  >
+                                    {addedId === product._id ? (
+                                      <><i className="bi bi-check-lg"></i> Added</>
+                                    ) : (
+                                      <><i className="bi bi-cart-plus"></i> Add</>
+                                    )}
+                                  </button>
                                 ) : (
                                   <span className="product-row-unavailable">Unavailable</span>
                                 )}
                               </div>
                             </div>
-                          </Link>
+                          </div>
                         );
                       })}
                     </div>
-                  </div>
+                  </ScrollRow>
                 </div>
               );
             })}
