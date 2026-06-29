@@ -5,49 +5,8 @@ import { Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../store/cartSlice';
 
-// Prevent vertical page scroll while horizontally scrolling a row
-const useHorizontalScrollLock = () => {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    let startX = 0, startY = 0, locked = false;
-    const onTouchStart = (e: TouchEvent) => {
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      locked = false;
-    };
-    const onTouchMove = (e: TouchEvent) => {
-      const dx = Math.abs(e.touches[0].clientX - startX);
-      const dy = Math.abs(e.touches[0].clientY - startY);
-      if (!locked && dx > dy && dx > 5) {
-        locked = true;
-        document.body.style.overflow = 'hidden';
-      }
-      if (locked) {
-        e.preventDefault();
-      }
-    };
-    const onTouchEnd = () => {
-      locked = false;
-      document.body.style.overflow = '';
-    };
-    el.addEventListener('touchstart', onTouchStart, { passive: true });
-    el.addEventListener('touchmove', onTouchMove, { passive: false });
-    el.addEventListener('touchend', onTouchEnd, { passive: true });
-    return () => {
-      el.removeEventListener('touchstart', onTouchStart);
-      el.removeEventListener('touchmove', onTouchMove);
-      el.removeEventListener('touchend', onTouchEnd);
-      document.body.style.overflow = '';
-    };
-  }, []);
-  return ref;
-};
-
 const ScrollRow: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const ref = useHorizontalScrollLock();
-  return <div ref={ref} className="product-row-scroll">{children}</div>;
+  return <div className="product-row-scroll">{children}</div>;
 };
 
 interface Product {
