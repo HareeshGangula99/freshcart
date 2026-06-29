@@ -12,7 +12,7 @@ const Cart: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const cart = useSelector((state: RootState) => state.cart.items);
-  const [address, setAddress] = useState<{ street: string; city: string; zip: string; lat?: number; lng?: number }>({ street: '', city: '', zip: '' });
+  const [address, setAddress] = useState<{ street: string; building: string; landmark: string; city: string; zip: string; lat?: number; lng?: number }>({ street: '', building: '', landmark: '', city: '', zip: '' });
   const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -21,7 +21,7 @@ const Cart: React.FC = () => {
 
   const handleCheckout = async () => {
     if (!user) return alert('Please login to checkout');
-    if (!address.street || !address.city || !address.zip) return alert('Please enter delivery address');
+    if (!address.street || !address.building || !address.city || !address.zip) return alert('Please enter complete delivery address');
     if (cart.length === 0) return alert('Cart is empty');
 
     setLoading(true);
@@ -159,21 +159,39 @@ const Cart: React.FC = () => {
                   value={address.street}
                   onChange={(val) => setAddress({ ...address, street: val })}
                   onLocationSelect={(data) => {
-                    setAddress({ street: data.street, city: data.city, zip: data.zip, lat: data.lat, lng: data.lng });
+                    setAddress({ street: data.street, building: address.building, landmark: address.landmark, city: data.city, zip: data.zip, lat: data.lat, lng: data.lng });
                     setLocationCoords({ lat: data.lat, lng: data.lng });
                   }}
                   placeholder="Search delivery location..."
                 />
+                <div className="mt-2">
+                  <input
+                    placeholder="Building / Flat No. *"
+                    className="form-control fc-input"
+                    style={{ fontSize: '13px' }}
+                    value={address.building}
+                    onChange={e => setAddress({ ...address, building: e.target.value })}
+                  />
+                </div>
+                <div className="mt-2">
+                  <input
+                    placeholder="Nearest Landmark (optional)"
+                    className="form-control fc-input"
+                    style={{ fontSize: '13px' }}
+                    value={address.landmark}
+                    onChange={e => setAddress({ ...address, landmark: e.target.value })}
+                  />
+                </div>
                 <div className="d-flex gap-2 mt-2">
                   <input
-                    placeholder="City"
+                    placeholder="City *"
                     className="form-control fc-input"
                     style={{ fontSize: '13px' }}
                     value={address.city}
                     onChange={e => setAddress({ ...address, city: e.target.value })}
                   />
                   <input
-                    placeholder="ZIP"
+                    placeholder="ZIP *"
                     className="form-control fc-input"
                     style={{ fontSize: '13px' }}
                     value={address.zip}
