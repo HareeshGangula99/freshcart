@@ -366,95 +366,225 @@ body {
   white-space: nowrap;
 }
 
-/* ===== ZEPTO-STYLE MOBILE LAYOUT ===== */
-.home-page-wrapper {
+/* ===== ZEPTO-STYLE HORIZONTAL SCROLL LAYOUT ===== */
+.zepto-layout {
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.home-fixed-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
+.zepto-header {
+  flex-shrink: 0;
   background: #f8f7f4;
-  padding-top: 0;
+  z-index: 100;
 }
 
-.home-scroll-content {
+.zepto-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: 20px;
 }
 
-/* Desktop: Normal scroll behavior */
+.zepto-content::-webkit-scrollbar {
+  width: 0;
+  display: none;
+}
+
+/* Product Row Section */
+.product-row-section {
+  margin-bottom: 16px;
+}
+
+/* Horizontal Scrollable Row */
+.product-row-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 0 12px;
+}
+
+.product-row-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.product-row-inner {
+  display: flex;
+  gap: 10px;
+  padding-right: 12px;
+}
+
+/* Product Card in Row */
+.product-row-card-link {
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.product-row-card {
+  width: 150px;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-row-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Product Image in Row */
+.product-row-img-wrapper {
+  position: relative;
+  height: 140px;
+  overflow: hidden;
+}
+
+.product-row-img-wrapper img {
+  transition: transform 0.3s ease;
+  display: block;
+}
+
+.product-row-card:hover .product-row-img-wrapper img {
+  transform: scale(1.05);
+}
+
+.product-row-out-of-stock {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(2px);
+}
+
+.product-row-out-of-stock span {
+  background: rgba(255,255,255,0.95);
+  color: #dc2626;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.product-row-quick-view {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  border-radius: 50%;
+  color: white;
+  font-size: 11px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.product-row-card:hover .product-row-quick-view {
+  opacity: 1;
+}
+
+/* Product Info in Row */
+.product-row-info {
+  padding: 10px;
+}
+
+.product-row-name {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-row-desc {
+  font-size: 10px;
+  color: #9ca3af;
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-row-price {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #059669;
+}
+
+.product-row-view-btn {
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #059669, #10b981);
+  padding: 4px 10px;
+  border-radius: 6px;
+  transition: transform 0.2s ease;
+}
+
+.product-row-card:hover .product-row-view-btn {
+  transform: scale(1.05);
+}
+
+.product-row-unavailable {
+  font-size: 9px;
+  font-weight: 500;
+  color: #dc2626;
+  background: #fef2f2;
+  padding: 3px 8px;
+  border-radius: 5px;
+  border: 1px solid #fecaca;
+}
+
+/* Desktop: Normal layout */
 @media (min-width: 992px) {
-  .home-page-wrapper {
+  .zepto-layout {
     height: auto;
-  }
-  .home-fixed-header {
-    position: static;
-    z-index: auto;
-  }
-  .home-scroll-content {
     overflow: visible;
   }
-}
-
-/* Mobile: Zepto-style fixed header + scrollable products */
-@media (max-width: 991.98px) {
-  .home-page-wrapper {
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 56px);
-    overflow: hidden;
+  .zepto-header {
+    position: static;
   }
-  .home-fixed-header {
-    flex-shrink: 0;
-    padding: 12px 12px 0 12px;
-    background: #f8f7f4;
-    border-bottom: 1px solid #f0f0f0;
+  .zepto-content {
+    overflow: visible;
+    padding-bottom: 0;
   }
-  .home-scroll-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 12px;
-    -webkit-overflow-scrolling: touch;
+  .product-row-scroll {
+    overflow-x: visible;
+    padding: 0;
   }
-  .home-scroll-content::-webkit-scrollbar {
-    width: 0;
-    display: none;
+  .product-row-inner {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    padding-right: 0;
   }
-}
-
-/* Mobile: Compact hero in fixed header */
-@media (max-width: 575.98px) {
-  .home-fixed-header .fc-hero {
-    padding: 16px 14px;
-    border-radius: 12px;
-    margin-bottom: 10px;
+  .product-row-card {
+    width: 100%;
   }
-  .home-fixed-header .fc-hero h1 {
-    font-size: 20px !important;
-    margin-bottom: 6px !important;
-  }
-  .home-fixed-header .fc-hero p {
-    font-size: 12px !important;
-    margin-bottom: 10px !important;
-  }
-  .hero-stats-row {
-    gap: 10px;
-  }
-  .hero-stat-item {
-    gap: 6px;
-  }
-  .hero-stat-item .rounded-3 {
-    width: 28px !important;
-    height: 28px !important;
-  }
-  .hero-stat-item p {
-    font-size: 10px !important;
-  }
-  .hero-stat-item small {
-    font-size: 8px !important;
+  .product-row-card:hover .product-row-quick-view {
+    opacity: 1;
   }
 }
 
@@ -500,6 +630,43 @@ body {
   }
   .product-img-wrapper .quick-view-btn i {
     font-size: 12px !important;
+  }
+}
+
+/* Mobile: Compact hero in fixed header */
+@media (max-width: 575.98px) {
+  .zepto-header .fc-hero {
+    padding: 14px 12px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  .zepto-header .fc-hero h1 {
+    font-size: 18px !important;
+    margin-bottom: 4px !important;
+  }
+  .zepto-header .fc-hero p {
+    font-size: 11px !important;
+    margin-bottom: 8px !important;
+  }
+  .hero-stats-row {
+    gap: 8px;
+  }
+  .hero-stat-item {
+    gap: 5px;
+  }
+  .hero-stat-item .rounded-3 {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  .hero-stat-item p {
+    font-size: 9px !important;
+  }
+  .hero-stat-item small {
+    font-size: 7px !important;
+  }
+  .category-pill {
+    padding: 5px 12px;
+    font-size: 11px;
   }
 }
 
