@@ -92,7 +92,7 @@ const ManagerDashboard: React.FC = () => {
   };
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in admin-panel">
       {notification && (
         <div className="position-fixed d-flex align-items-center gap-2 p-3 rounded-3 text-white fw-semibold animate-fade-in" style={{ top: '70px', right: '12px', left: '12px', zIndex: 1070, background: 'linear-gradient(135deg, #059669, #10b981)', boxShadow: '0 8px 32px rgba(5,150,105,0.3)', fontSize: '13px' }}>
           <i className="bi bi-bell"></i> {notification}
@@ -135,32 +135,36 @@ const ManagerDashboard: React.FC = () => {
       </div>
 
       {activeTab === 'orders' && (
-        <div className="d-flex flex-column gap-3">
+        <div className="row g-3">
           {orders.length === 0 ? (
-            <div className="card border-0 shadow-sm rounded-4 p-5 text-center">
-              <div style={{ fontSize: '40px', marginBottom: '12px' }}>📦</div>
-              <p className="text-muted fw-medium">No orders to process</p>
+            <div className="col-12">
+              <div className="card border-0 shadow-sm rounded-4 p-5 text-center">
+                <div style={{ fontSize: '40px', marginBottom: '12px' }}>📦</div>
+                <p className="text-muted fw-medium">No orders to process</p>
+              </div>
             </div>
           ) : orders.map(order => (
-            <div key={order._id} className="card border-0 shadow-sm rounded-4 p-3 d-flex align-items-center justify-content-between flex-wrap gap-2" style={{ cursor: 'pointer' }} onClick={() => setSelectedOrder(order)}>
-              <div className="d-flex align-items-center gap-3">
-                <div className="rounded-3 d-flex align-items-center justify-content-center bg-success bg-opacity-10" style={{ width: '40px', height: '40px' }}>
-                  <i className="bi bi-box text-success"></i>
-                </div>
-                <div>
-                  <div className="d-flex align-items-center gap-2 mb-1">
-                    <p className="fw-bold mb-0" style={{ fontSize: '13px' }}>#{order._id.slice(-6).toUpperCase()}</p>
-                    <span className={`badge ${statusBadge(order.orderStatus)}`}>{order.orderStatus}</span>
+            <div key={order._id} className="col-12 col-md-4 col-lg-3">
+              <div className="card border-0 shadow-sm rounded-4 p-3 d-flex flex-column h-100" style={{ cursor: 'pointer' }} onClick={() => setSelectedOrder(order)}>
+                <div className="d-flex align-items-center gap-3 mb-2 flex-grow-1">
+                  <div className="rounded-3 d-flex align-items-center justify-content-center bg-success bg-opacity-10 flex-shrink-0" style={{ width: '40px', height: '40px' }}>
+                    <i className="bi bi-box text-success"></i>
                   </div>
-                  <small className="text-muted">{order.userId?.name} · ₹{order.totalAmount}</small>
-                  <small className="text-muted d-block" style={{ fontSize: '11px' }}>{order.deliveryAddress?.city}, {order.deliveryAddress?.zip}</small>
+                  <div className="min-w-0">
+                    <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                      <p className="fw-bold mb-0" style={{ fontSize: '13px' }}>#{order._id.slice(-6).toUpperCase()}</p>
+                      <span className={`badge ${statusBadge(order.orderStatus)}`}>{order.orderStatus}</span>
+                    </div>
+                    <small className="text-muted">{order.userId?.name} · ₹{order.totalAmount}</small>
+                    <small className="text-muted d-block" style={{ fontSize: '11px' }}>{order.deliveryAddress?.city}, {order.deliveryAddress?.zip}</small>
+                  </div>
                 </div>
+                {order.orderStatus !== 'DISPATCHED' && order.orderStatus !== 'DELIVERED' && (
+                  <button onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }} className="btn btn-sm fw-bold text-white rounded-3 px-3 py-2 fc-primary d-flex align-items-center justify-content-center gap-1 w-100 mt-auto">
+                    Dispatch <i className="bi bi-chevron-right"></i>
+                  </button>
+                )}
               </div>
-              {order.orderStatus !== 'DISPATCHED' && order.orderStatus !== 'DELIVERED' && (
-                <button onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }} className="btn btn-sm fw-bold text-white rounded-3 px-3 py-2 fc-primary d-flex align-items-center gap-1">
-                  Dispatch <i className="bi bi-chevron-right"></i>
-                </button>
-              )}
             </div>
           ))}
         </div>

@@ -189,7 +189,7 @@ const PartnerDashboard: React.FC = () => {
   };
 
   return (
-    <div className="animate-fade-in" style={{ minHeight: 'calc(100vh - 100px)' }}>
+    <div className=" animate-fade-in admin-panel" style={{ minHeight: 'calc(100vh - 100px)' }}>
       {/* Toast Notification */}
       {toast && (
         <div

@@ -462,19 +462,19 @@ const AdminDashboard: React.FC = () => {
   );
 
   return (
-    <div className="animate-fade-in">
-      <div className="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2 gap-md-3">
-        <div className="d-flex align-items-center gap-3">
+    <div className="animate-fade-in admin-panel">
+      <div className="row d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2 gap-md-3">
+        <div className="col-12 col-lg-6 d-flex align-items-center gap-3">
           <div className="d-flex align-items-center justify-content-center rounded-3 fc-primary" style={{ width: '40px', height: '40px' }}>
             <i className="bi bi-shield-check text-white"></i>
           </div>
-          <div>
-            <h4 className="fw-bold mb-0" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '18px' }}>Admin Panel</h4>
+          <div >
+            <h4  className="fw-bold mb-0" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: '18px' }}>Admin Panel</h4>
             <small className="text-muted">Manage your store operations</small>
           </div>
         </div>
         {activeTab === 'products' && (
-          <div className="d-flex gap-2 flex-wrap">
+          <div className="col-12 col-lg-6 d-flex gap-2 flex-wrap">
             <button onClick={() => setShowBulkForm(true)} className="btn btn-sm fw-bold text-white rounded-3 px-3 py-2 d-flex align-items-center gap-1" style={{ background: '#7c3aed' }}>
               <i className="bi bi-plus-lg"></i> Bulk Add
             </button>
