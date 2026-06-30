@@ -10,6 +10,25 @@ const ScrollRow: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const lockedRef = useRef(false);
   const startX = useRef(0);
   const startY = useRef(0);
+  const [atEnd, setAtEnd] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const updateAtEnd = () => {
+      setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 2);
+    };
+
+    updateAtEnd();
+    el.addEventListener('scroll', updateAtEnd, { passive: true });
+    const ro = new ResizeObserver(updateAtEnd);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener('scroll', updateAtEnd);
+      ro.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     const el = ref.current;
@@ -29,6 +48,9 @@ const ScrollRow: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       }
       if (lockedRef.current) {
         e.preventDefault();
+        const deltaX = e.touches[0].clientX - startX.current;
+        el.scrollLeft -= deltaX;
+        startX.current = e.touches[0].clientX;
       }
     };
 
@@ -46,7 +68,12 @@ const ScrollRow: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     };
   }, []);
 
-  return <div ref={ref} className="product-row-scroll">{children}</div>;
+  return (
+    <div className="product-row-scroll-wrap">
+      <div ref={ref} className="product-row-scroll">{children}</div>
+      <div className={`product-row-scroll-fade ${atEnd ? 'at-end' : ''}`} />
+    </div>
+  );
 };
 
 interface Product {
